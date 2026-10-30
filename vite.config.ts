@@ -4,8 +4,12 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// GitHub Pages serves the app from /<repo>/; the deploy workflow sets BASE_PATH.
+const base = process.env.BASE_PATH ?? '/'
+
 // https://vite.dev/config/
 export default defineConfig({
+  base,
   plugins: [
     react(),
     tailwindcss(),
@@ -21,9 +25,9 @@ export default defineConfig({
         name: 'Beam',
         short_name: 'Beam',
         description: 'Pass text, links and files between your devices.',
-        id: '/',
-        start_url: '/',
-        scope: '/',
+        id: base,
+        start_url: base,
+        scope: base,
         display: 'standalone',
         background_color: '#0b0b12',
         theme_color: '#4f46e5',

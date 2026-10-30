@@ -6,3 +6,4 @@
 - Vitest, `.env.example`, git repo.
 - Docs: DECISIONS, SETUP, TESTING, CHANGELOG.
 - Phase 1 database migration written (`supabase/migrations/`) ready to apply.
+- Simplified the stack to Supabase + GitHub only: password sign-in (no emails or SMTP) and GitHub Pages hosting via a GitHub Actions workflow. The build supports the `/beam/` sub-path.

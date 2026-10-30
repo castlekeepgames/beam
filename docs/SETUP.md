@@ -3,6 +3,8 @@
 Every manual step needed to run Beam, written so you can redo it from scratch.
 Run all commands in **Windows PowerShell** from the project folder (`C:\App Dev\PushMyStuff`).
 
+Beam uses only two services: **Supabase** (database, login, realtime) and **GitHub** (code + hosting via GitHub Pages).
+
 ---
 
 ## 0. Prerequisites (one-time)
@@ -23,7 +25,7 @@ Run all commands in **Windows PowerShell** from the project folder (`C:\App Dev\
 
 ## 1. Create the Supabase project
 
-1. Go to <https://supabase.com/dashboard> and sign in. Use the same email you'll use to sign in to Beam: Supabase's built-in email sender only delivers to members of your Supabase organization.
+1. Go to <https://supabase.com/dashboard> and sign in (or sign up).
 2. Click **New project**.
    - **Name:** `beam`
    - **Database password:** click **Generate a password** and save it in your password manager. You'll need it in Phase 3.
@@ -36,53 +38,21 @@ Run all commands in **Windows PowerShell** from the project folder (`C:\App Dev\
 
 ---
 
-## 2. Make sign-in emails contain a code (not just a link)
+## 2. Create your Beam login and block everyone else
 
-Beam signs you in with a one-time code typed into the app. Supabase's default emails only contain a link, so both templates need changing. Supabase only lets you edit templates once you've set up your own email sender (custom SMTP). We use Resend for this (see `docs/DECISIONS.md`).
+Beam has exactly one user: you. You create that user here, then switch off sign-ups so nobody else can make an account. Supabase never needs to send an email.
 
-### 2a. Create a Resend sending key
+1. In the left sidebar, go to **Authentication → Users**.
+2. Click **Add user**, then **Create new user**.
+   - **Email:** your email address
+   - **Password:** a strong password. Save it in your password manager; you'll type it once on each device.
+   - Tick **Auto Confirm User**.
+3. Click **Create user**. You should see yourself in the users list.
+4. Go to **Authentication → Sign In / Providers** (it may be labelled **Providers** or **Settings**).
+5. Turn **off** **Allow new users to sign up**, then click **Save**.
+6. On the same page, check that the **Email** provider is enabled. Leave everything else as it is.
 
-1. Go to <https://resend.com> and sign up with **the same email address you'll use to sign in to Beam**. Without your own domain, Resend only delivers to the address on your account, which is all Beam needs.
-2. Verify your email if Resend asks you to.
-3. In Resend, open **API Keys**, then click **Create API Key**.
-   - **Name:** `supabase-beam`
-   - **Permission:** **Sending access** (not Full access)
-   - **Domain:** All domains
-4. Click **Add**, then copy the key (it starts with `re_`). Resend only shows it once. Keep it somewhere temporary until step 2b. Don't put it in `.env.local` or anywhere in the project.
-
-### 2b. Point Supabase at Resend
-
-1. In the Supabase dashboard, go to **Authentication → Emails** and open the **SMTP Settings** tab. If you don't see it, look under **Project Settings → Authentication**.
-2. Turn on **Enable custom SMTP** and fill in:
-   - **Sender email:** `onboarding@resend.dev`
-   - **Sender name:** `Beam`
-   - **Host:** `smtp.resend.com`
-   - **Port:** `465`
-   - **Username:** `resend`
-   - **Password:** the `re_...` key from 2a
-   - **Minimum interval between emails:** leave the default
-3. Click **Save**.
-
-> Codes come from `onboarding@resend.dev`. The first one may land in spam. If it does, mark it "Not spam".
-
-### 2c. Edit the templates
-
-1. Still in **Authentication → Emails**, open the **Templates** tab.
-2. Open the **Magic Link** template. Replace the **Subject** with:
-   ```
-   Your Beam sign-in code
-   ```
-   and replace the **Body** (message) with:
-   ```html
-   <h2>Your Beam sign-in code</h2>
-   <p>Enter this code in Beam:</p>
-   <p style="font-size:28px;font-weight:bold;letter-spacing:4px">{{ .Token }}</p>
-   <p>If you didn't ask for this, you can ignore this email.</p>
-   ```
-   Click **Save**.
-3. Open the **Confirm signup** template and make exactly the same change, with the same subject and body. Your very first sign-in uses this template. Click **Save**.
-4. Type `{{ .Token }}` exactly as shown, with double curly braces, a dot and a capital T. Supabase replaces it with the code.
-5. Go to **Authentication → Sign In / Providers** (it may be labelled **Providers**) and check that **Email** is enabled. Leave the other settings as they are. The app accepts codes of any length from 6 to 10 digits.
+> If you had already started setting up custom SMTP or Resend: it isn't needed. You can switch **Enable custom SMTP** off again or leave it; Beam doesn't use it.
 
 ---
 
@@ -117,7 +87,7 @@ Beam signs you in with a one-time code typed into the app. Supabase's default em
    VITE_SUPABASE_URL=https://abcdefghijklmnop.supabase.co
    VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
    ```
-   `.env.local` is gitignored, so it will never be committed.
+   `.env.local` is gitignored, so it will never be committed. Keep these two values handy for section 6 as well.
 
 ---
 
@@ -132,16 +102,53 @@ Beam signs you in with a one-time code typed into the app. Supabase's default em
 
 ---
 
-## 6. Lock the account to just you (after your first sign-in)
+## 6. Put Beam online with GitHub Pages (end of Phase 1)
 
-Do this once you have signed in to Beam successfully for the first time.
+Your phone can only install Beam, get notifications and use the share sheet from a real HTTPS site. GitHub Pages gives you one for free. The repo must be **public** for free Pages; nothing secret is in it.
 
-1. Go to **Authentication → Sign In / Providers** (or **Authentication → Settings**).
-2. Turn **off** "Allow new users to sign up". Click **Save**.
-3. You can still sign in. Nobody else can create an account.
+### 6a. Create the GitHub repo and push the code
 
----
+1. Go to <https://github.com> and sign in (or sign up).
+2. Go to <https://github.com/new>.
+   - **Repository name:** `beam`
+   - **Public**
+   - Leave **Add a README**, **.gitignore** and **license** all off (the project already has these).
+3. Click **Create repository**.
+4. In PowerShell, connect the project to it, replacing `YOUR-GITHUB-USERNAME`:
+   ```powershell
+   git remote add origin https://github.com/YOUR-GITHUB-USERNAME/beam.git
+   ```
+5. Push the code. A browser window may open asking you to sign in to GitHub; approve it.
+   ```powershell
+   git push -u origin main
+   ```
 
-## 7. Deploy (written at the end of Phase 1)
+### 6b. Give the build its two Supabase values
 
-Hosting is Vercel (see `docs/DECISIONS.md`). Step-by-step instructions for GitHub, Vercel and installing the PWA on Android and Windows will be added here once the Phase 1 features are built.
+1. On the repo page, go to **Settings → Secrets and variables → Actions**.
+2. Open the **Variables** tab and click **New repository variable**.
+   - **Name:** `VITE_SUPABASE_URL` **Value:** your Project URL. Click **Add variable**.
+3. Click **New repository variable** again.
+   - **Name:** `VITE_SUPABASE_PUBLISHABLE_KEY` **Value:** your publishable key. Click **Add variable**.
+
+### 6c. Turn on GitHub Pages
+
+1. Go to **Settings → Pages**.
+2. Under **Build and deployment → Source**, choose **GitHub Actions**.
+3. Go to the **Actions** tab, click **Deploy to GitHub Pages** on the left, then **Run workflow → Run workflow**.
+4. Wait for the run to show a green tick (about 1 minute).
+5. Beam is now at `https://YOUR-GITHUB-USERNAME.github.io/beam/`.
+
+From now on, every `git push` to `main` redeploys automatically.
+
+### 6d. Install Beam on your devices
+
+**Android phone (Chrome):**
+1. Open `https://YOUR-GITHUB-USERNAME.github.io/beam/` in Chrome.
+2. Tap the **⋮** menu, then **Add to Home screen** (or **Install app**), then **Install**.
+3. Open Beam from your home screen and sign in.
+
+**Windows PC (Edge or Chrome):**
+1. Open the same URL.
+2. Click the **Install** icon at the right end of the address bar (a monitor with a down arrow), then **Install**.
+3. Beam opens in its own window and is added to the Start menu. Sign in.

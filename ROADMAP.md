@@ -8,19 +8,20 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Git repo, `.gitignore`, `.env.example`
 - [x] Create `docs/` files: DECISIONS, SETUP, TESTING, CHANGELOG
 - [x] Write Supabase project setup steps in `docs/SETUP.md` (I do these by hand)
-- [ ] **You:** create Supabase project, apply migration, fill `.env.local` (`docs/SETUP.md` sections 1–4)
+- [x] Simplify stack to Supabase + GitHub Pages with password sign-in (see DECISIONS)
+- [ ] **You:** create Supabase project, add your user, apply migration, fill `.env.local` (`docs/SETUP.md` sections 1–4)
 
 ## Phase 1 — MVP: text and links
-- [ ] Email OTP sign-in with persistent session
+- [ ] Email + password sign-in with persistent session
 - [ ] Device registration + naming
 - [ ] Migrations: `devices`, `items`, RLS policies (written; applied by you in SETUP step 3)
 - [ ] Paste box, "Paste from clipboard" button, Send
 - [ ] Link detection (logic + tests done in `src/lib/links.ts`; UI wiring pending)
-- [ ] Lock sign-ups after first sign-in (`docs/SETUP.md` section 6)
 - [ ] Realtime list of recent items, newest first, showing source device and time
 - [ ] Copy / Open actions, delete item
 - [ ] Refetch on focus/reconnect
-- [ ] Deploy to HTTPS host; install PWA on Android and Windows
+- [ ] GitHub Pages deploy workflow (`.github/workflows/deploy.yml`)
+- [ ] Deploy to GitHub Pages; install PWA on Android and Windows
 - [ ] TESTING.md checklist for Phase 1
 
 ## Phase 2 — Files

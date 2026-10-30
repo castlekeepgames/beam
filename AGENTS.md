@@ -26,13 +26,14 @@ Non-goals for now: multiple users/sharing with others, iOS, a native Windows tra
 - **Frontend:** Vite + React + TypeScript, installable PWA via `vite-plugin-pwa` using the `injectManifest` strategy (we need a custom service worker for share target + push).
 - **Styling:** Tailwind CSS. Mobile-first; must also look good as an installed desktop window.
 - **Backend:** Supabase
-  - Auth: email one-time code (OTP), sessions persisted so I rarely re-sign-in.
+  - Auth: email + password for a single user created in the Supabase dashboard; public sign-ups disabled. Sessions persisted so I rarely re-sign-in. No auth emails are ever sent (no SMTP needed).
   - Postgres with Row Level Security on every table.
   - Realtime: subscribe to inserts on `items` for the current user.
   - Storage: private bucket `files`, accessed via signed URLs only.
   - Edge Functions (Deno): `send-push` (web push on new item) and `cleanup` (scheduled deletion of expired items + their files).
 - **Push:** standard Web Push with VAPID keys, sent from the `send-push` Edge Function.
-- **Hosting:** a static host with HTTPS (Cloudflare Pages, Netlify or Vercel — pick one and record it in `docs/DECISIONS.md`). HTTPS is required for PWA install, service workers, push and share target.
+- **Hosting:** GitHub Pages (public repo), deployed by a GitHub Actions workflow on every push to `main`. The site lives under a sub-path (`https://<user>.github.io/beam/`), so never hard-code `/` for asset or app URLs — use `import.meta.env.BASE_URL` or relative paths. HTTPS is required for PWA install, service workers, push and share target.
+- **Third parties:** keep it to Supabase and GitHub. Ask before adding any other service.
 - **Tests:** Vitest for logic. Device flows are verified manually using `docs/TESTING.md`.
 
 Prefer well-maintained libraries over hand-rolled code, but don't add a dependency for something a few lines can do. Ask before adding anything heavy.
@@ -65,7 +66,7 @@ Keep all schema changes as SQL migration files in `supabase/migrations/`, never 
 
 ## Security rules
 
-- Never commit secrets. Use `.env.local` (gitignored) for the Supabase URL and anon key; the service role key and VAPID private key live only in Supabase Edge Function secrets.
+- Never commit secrets. The repo is public. Use `.env.local` (gitignored) for the Supabase URL and publishable key locally, and GitHub repository variables for the deployed build (both values are public by design). The service role / secret key and VAPID private key live only in Supabase Edge Function secrets.
 - Keep `.env.example` up to date with variable names (no values).
 - Every new table gets RLS enabled in the same migration that creates it.
 

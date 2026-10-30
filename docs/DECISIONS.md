@@ -10,6 +10,7 @@ One entry per meaningful decision, newest at the bottom.
 **Rejected:** Pinning older majors (Vite 6, Tailwind 3), which gains nothing for a new project.
 
 ### 2026-10-30 — Hosting: Vercel (Hobby plan)
+**Superseded** by "Simplify to Supabase + GitHub Pages" below.
 **Decision:** Deploy the static build to Vercel from a GitHub repo. Every push to `main` deploys automatically.
 **Why:** It's free for personal, non-commercial use and auto-detects Vite. You set env vars in the dashboard, the HTTPS URL is stable, and preview deploys are available if we want them.
 **Rejected:** Netlify: its newer free plan is credit-based and charges per production deploy, which a build-test-fix loop burns through. Cloudflare Pages: also a good option, but its dashboard now pushes you towards Workers, which makes the setup steps more fiddly.
@@ -25,6 +26,7 @@ One entry per meaningful decision, newest at the bottom.
 **Rejected:** Setting up the CLI in Phase 0, which adds a large download plus a login and link step for one SQL file.
 
 ### 2026-10-30 — Only one account; sign-ups are turned off after the first sign-in
+**Superseded** by "Simplify to Supabase + GitHub Pages" below (the user is now created in the dashboard, so sign-ups are off from the start).
 **Decision:** After you create your account with the first OTP sign-in, turn off "Allow new users to sign up" in Supabase Auth.
 **Why:** Email OTP otherwise lets anyone with the URL create an account. RLS would keep their data separate, but they'd still be using our free-tier quota. Beam is single-user.
 **Rejected:** An allow-list trigger on `auth.users`, which is more moving parts for the same result.
@@ -55,6 +57,27 @@ One entry per meaningful decision, newest at the bottom.
 **Why:** These close gaps in the starting model without changing its shape. The 100k-character cap stops an accidental huge paste from going over Realtime's message size limit.
 
 ### 2026-10-30 — Sign-in emails go through Resend (custom SMTP)
+**Superseded** by "Simplify to Supabase + GitHub Pages" below. Never set up.
 **Decision:** Supabase Auth sends email through Resend's SMTP (`smtp.resend.com`), from `onboarding@resend.dev`, using a Resend API key with sending access only.
 **Why:** Supabase won't let you edit email templates without custom SMTP, and we need the template to show the one-time code. The built-in sender is also limited to a couple of emails per hour. Resend's free tier covers this easily. Its key can only send mail, and without a verified domain Resend only delivers to the account owner's address, which suits a single-user app.
 **Rejected:** Gmail SMTP with an app password. It works, but that password gives full access to the Gmail account if it ever leaks. We also rejected switching to magic links: tapping a link in the email opens the browser rather than the installed PWA, which makes sign-in fiddly.
+
+### 2026-10-30 — Simplify to Supabase + GitHub Pages, with password sign-in
+**Decision:**
+- **Two services only:** Supabase (database, auth, realtime, storage, Edge Functions) and GitHub (code and hosting).
+- **Sign-in:** email + password. The single user is created in the Supabase dashboard with "Auto Confirm", and public sign-ups are off from the start. Supabase never sends an auth email, so no SMTP is needed.
+- **Hosting:** GitHub Pages, deployed by `.github/workflows/deploy.yml` on every push to `main`. The repo is public, because free Pages requires it.
+- **Sub-path:** the site is served from `/<repo-name>/`, so the Vite `base` comes from the `BASE_PATH` env var. It's `/` locally and set by the workflow in CI. The manifest scope and start URL follow it. The build also copies `index.html` to `404.html`, so a deep link still loads the app.
+- **Config:** the deployed build reads the Supabase URL and publishable key from GitHub repository **variables**, not secrets. Both values end up in the public JS bundle anyway.
+
+**Why:** The original plan needed four accounts (Supabase, Vercel, Resend, GitHub), plus SMTP and email-template setup, just to send a sign-in code to one person. A password stays remembered by the persisted session and the browser's password manager, so you rarely type it. GitHub Pages removes a separate host account. Every roadmap feature still works.
+
+**Trade-offs accepted:**
+- The code is publicly visible. Nothing secret is in it. RLS protects the data, and with sign-ups off nobody else can get an account.
+- GitHub Pages can't set custom headers. That's fine: the service worker is revalidated by the browser's normal update check.
+
+**Rejected:**
+- Cloudflare-only (Workers + Durable Objects + R2): one account, but it needs a card for R2, and we'd hand-write auth, realtime and push.
+- Firebase-only: one account, but Storage and Functions need the paid Blaze plan.
+- Hosting on the home PC: only works on the same network and while the PC is on, and HTTPS is awkward.
+- Vercel with a private repo: adds a third account just to hide code that has nothing secret in it.
