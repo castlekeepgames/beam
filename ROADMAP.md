@@ -9,20 +9,21 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Create `docs/` files: DECISIONS, SETUP, TESTING, CHANGELOG
 - [x] Write Supabase project setup steps in `docs/SETUP.md` (I do these by hand)
 - [x] Simplify stack to Supabase + GitHub Pages with password sign-in (see DECISIONS)
-- [ ] **You:** create Supabase project, add your user, apply migration, fill `.env.local` (`docs/SETUP.md` sections 1–4)
+- [x] **You:** create Supabase project, add your user, apply migration, fill `.env.local` (`docs/SETUP.md` sections 1–4)
 
 ## Phase 1 — MVP: text and links
-- [ ] Email + password sign-in with persistent session
-- [ ] Device registration + naming
-- [ ] Migrations: `devices`, `items`, RLS policies (written; applied by you in SETUP step 3)
-- [ ] Paste box, "Paste from clipboard" button, Send
-- [ ] Link detection (logic + tests done in `src/lib/links.ts`; UI wiring pending)
-- [ ] Realtime list of recent items, newest first, showing source device and time
-- [ ] Copy / Open actions, delete item
-- [ ] Refetch on focus/reconnect
-- [ ] GitHub Pages deploy workflow (`.github/workflows/deploy.yml`)
-- [ ] Deploy to GitHub Pages; install PWA on Android and Windows
-- [ ] TESTING.md checklist for Phase 1
+- [x] Email + password sign-in with persistent session
+- [x] Device registration + naming (rename from the device-name menu)
+- [x] Migrations: `devices`, `items`, RLS policies (applied 2026-10-30)
+- [x] Paste box, "Paste from clipboard" button, Send
+- [x] Link detection
+- [x] Realtime list of recent items, newest first, showing source device and time
+- [x] Copy / Open actions, delete item
+- [x] Refetch on focus/reconnect
+- [x] GitHub Pages deploy workflow (`.github/workflows/deploy.yml`)
+- [x] TESTING.md checklist for Phase 1
+- [ ] **You:** deploy to GitHub Pages; install PWA on Android and Windows (`docs/SETUP.md` section 6)
+- [ ] **You:** run the Phase 1 checklist in `docs/TESTING.md` on both devices
 
 ## Phase 2 — Files
 - [ ] Private `files` storage bucket + policies

@@ -8,10 +8,54 @@ Tick items as you test them, and note the date and anything odd.
 ## Phase 0 — Project setup
 
 Windows PC (local):
-- [ ] `npm run dev`, then open `http://localhost:5173`. You should see the Beam logo and "Setup in progress."
+- [ ] `npm run dev`, then open `http://localhost:5173`. The Beam sign-in screen appears.
 - [ ] `npm run build`, then `npm run preview`, then open the printed URL. DevTools → Application → Manifest shows "Beam" with icons and no errors.
 - [ ] In the same preview, DevTools → Application → Service workers shows `sw.js` as activated.
 
+---
+
 ## Phase 1 — Text and links
 
-Checklist will be written as the Phase 1 features are built.
+### A. Quick local check on the PC (before deploying)
+Run `npm run dev` and open `http://localhost:5173` in Edge or Chrome.
+- [ ] Wrong password: shows "Wrong email or password."
+- [ ] Right password: shows "Name this device", pre-filled with "Windows PC".
+- [ ] Click **Continue**: the main screen shows the paste box and the "Recent" list, and the dot at the top says **Live** (green).
+- [ ] Type some text and click **Send**: it appears at the top as "This device · just now", and the box clears.
+
+### B. Install on both devices
+Follow `docs/SETUP.md` section 6, then sign in on each device.
+- [ ] **Android:** Beam installs from Chrome and opens full-screen from its home-screen icon. The naming screen suggests "Android phone".
+- [ ] **Windows:** Beam installs from Edge or Chrome, opens in its own window and appears in the Start menu.
+- [ ] Close Beam completely and reopen it on each device. You're still signed in and not asked to name the device again.
+
+### C. Sending and receiving (have both devices open)
+- [ ] **PC → phone:** send text from the PC. It appears on the phone within about 2 seconds, with a brief indigo outline, labelled with the PC's name.
+- [ ] **Phone → PC:** the same in reverse.
+- [ ] The item is **not** outlined on the device that sent it, and is labelled "This device" there.
+- [ ] **Link:** paste just a URL (e.g. `https://example.com`). The hint says "Will send as a link". On the other device it shows as a link with an **Open** button, which opens it in the browser.
+- [ ] **Not a link:** text with a URL plus other words (e.g. `look at https://example.com`) is sent as plain text.
+- [ ] `www.example.com` is sent as a link and opens `https://www.example.com`.
+- [ ] **Copy:** tap Copy on a text item. You see "Copied", and pasting into another app gives exactly the same text, line breaks included.
+- [ ] **Long text:** more than 6 lines shows **Show more / Show less**.
+- [ ] **Empty box:** the Send button is disabled.
+- [ ] **Delete:** delete an item on one device. It disappears there at once, and on the other device within a couple of seconds (or the next time you switch back to the app).
+
+### D. Clipboard button
+- [ ] **Android:** tap **Paste from clipboard**. The first time, Chrome asks for permission; allow it, and the clipboard text fills the box.
+- [ ] **Android:** deny the permission (or turn it off in site settings). Beam shows a message explaining how to paste manually.
+- [ ] **Windows:** **Paste from clipboard** fills the box. Edge or Chrome may ask the first time.
+
+### E. Missed messages and reconnecting
+- [ ] Turn on airplane mode on the phone. The dot turns red ("Offline – reconnecting").
+- [ ] While the phone is offline, send something from the PC. Turn airplane mode off. The item appears on the phone without you doing anything else.
+- [ ] Lock the phone for 5 minutes or more, send something from the PC, then unlock and open Beam. The item is there.
+- [ ] Minimise Beam on the PC, send from the phone, then bring Beam back. The item is there.
+
+### F. Device name and sign out
+- [ ] Tap the device name (top right), rename the device and save. You see "Device renamed". New items sent from it show the new name on the other device.
+- [ ] Choose **Sign out of this device**. The sign-in screen appears, and the **other** device is still signed in.
+- [ ] Sign in again on the same device. You're not asked to name it again.
+
+### G. Expiry (check the next day)
+- [ ] Items older than 24 hours no longer appear in the list. They're deleted from the database in Phase 5.

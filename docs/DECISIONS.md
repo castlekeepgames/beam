@@ -81,3 +81,18 @@ One entry per meaningful decision, newest at the bottom.
 - Firebase-only: one account, but Storage and Functions need the paid Blaze plan.
 - Hosting on the home PC: only works on the same network and while the PC is on, and HTTPS is awkward.
 - Vercel with a private repo: adds a third account just to hide code that has nothing secret in it.
+
+### 2026-10-30 — Phase 1 behaviour choices
+**Decision:**
+- **Paste from clipboard fills the box rather than sending straight away.** You see what's about to go out (clipboards often hold something stale or private), and Send is one more tap. Easy to flip later if it feels slow.
+- **Sign out applies to this device only** (`signOut({ scope: 'local' })`). Signing out on the phone doesn't sign out the PC.
+- **Sync strategy:**
+  - Realtime `INSERT` events filtered to your `user_id`.
+  - Realtime `DELETE` events. Supabase can't filter these and only sends the row id, which is fine for one user.
+  - A full refetch whenever the channel (re)subscribes, the window regains focus or visibility, or the network comes back.
+  - The list keeps the newest 100 unexpired items. Expired items are hidden by the query and on the client until the Phase 5 cleanup job deletes them.
+- **Device identity:** `{ id, name }` is stored in localStorage under `beam.device`. On start we update `last_seen` on that row. If the row is missing (deleted, or a different account) you're asked to name the device again. If the request fails because you're offline, the app starts with the remembered device. `last_seen` is refreshed at most every 5 minutes while the app is visible.
+- **Text is sent exactly as typed.** Only a lone URL is trimmed and stored as a link. A bare `www.` host becomes `https://`.
+- **"Open" only follows http(s) URLs,** even if the database somehow holds something else.
+
+**Why:** These match the spec's behaviour notes (clipboard only on a tap, catch up after reconnecting, never highlight on the device an item came from) while keeping the code small.
