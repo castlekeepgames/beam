@@ -53,3 +53,8 @@ One entry per meaningful decision, newest at the bottom.
 - Table privileges are granted to `authenticated` only, and revoked from `anon`. This is in addition to RLS.
 
 **Why:** These close gaps in the starting model without changing its shape. The 100k-character cap stops an accidental huge paste from going over Realtime's message size limit.
+
+### 2026-10-30 — Sign-in emails go through Resend (custom SMTP)
+**Decision:** Supabase Auth sends email through Resend's SMTP (`smtp.resend.com`), from `onboarding@resend.dev`, using a Resend API key with sending access only.
+**Why:** Supabase won't let you edit email templates without custom SMTP, and we need the template to show the one-time code. The built-in sender is also limited to a couple of emails per hour. Resend's free tier covers this easily. Its key can only send mail, and without a verified domain Resend only delivers to the account owner's address, which suits a single-user app.
+**Rejected:** Gmail SMTP with an app password. It works, but that password gives full access to the Gmail account if it ever leaks. We also rejected switching to magic links: tapping a link in the email opens the browser rather than the installed PWA, which makes sign-in fiddly.

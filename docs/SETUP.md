@@ -38,9 +38,36 @@ Run all commands in **Windows PowerShell** from the project folder (`C:\App Dev\
 
 ## 2. Make sign-in emails contain a code (not just a link)
 
-Beam signs you in with a one-time code typed into the app. Supabase's default emails only contain a link, so both templates need changing.
+Beam signs you in with a one-time code typed into the app. Supabase's default emails only contain a link, so both templates need changing. Supabase only lets you edit templates once you've set up your own email sender (custom SMTP). We use Resend for this (see `docs/DECISIONS.md`).
 
-1. In the left sidebar, go to **Authentication → Emails** (it may be labelled **Email Templates**).
+### 2a. Create a Resend sending key
+
+1. Go to <https://resend.com> and sign up with **the same email address you'll use to sign in to Beam**. Without your own domain, Resend only delivers to the address on your account, which is all Beam needs.
+2. Verify your email if Resend asks you to.
+3. In Resend, open **API Keys**, then click **Create API Key**.
+   - **Name:** `supabase-beam`
+   - **Permission:** **Sending access** (not Full access)
+   - **Domain:** All domains
+4. Click **Add**, then copy the key (it starts with `re_`). Resend only shows it once. Keep it somewhere temporary until step 2b. Don't put it in `.env.local` or anywhere in the project.
+
+### 2b. Point Supabase at Resend
+
+1. In the Supabase dashboard, go to **Authentication → Emails** and open the **SMTP Settings** tab. If you don't see it, look under **Project Settings → Authentication**.
+2. Turn on **Enable custom SMTP** and fill in:
+   - **Sender email:** `onboarding@resend.dev`
+   - **Sender name:** `Beam`
+   - **Host:** `smtp.resend.com`
+   - **Port:** `465`
+   - **Username:** `resend`
+   - **Password:** the `re_...` key from 2a
+   - **Minimum interval between emails:** leave the default
+3. Click **Save**.
+
+> Codes come from `onboarding@resend.dev`. The first one may land in spam. If it does, mark it "Not spam".
+
+### 2c. Edit the templates
+
+1. Still in **Authentication → Emails**, open the **Templates** tab.
 2. Open the **Magic Link** template. Replace the **Subject** with:
    ```
    Your Beam sign-in code
@@ -54,7 +81,8 @@ Beam signs you in with a one-time code typed into the app. Supabase's default em
    ```
    Click **Save**.
 3. Open the **Confirm signup** template and make exactly the same change, with the same subject and body. Your very first sign-in uses this template. Click **Save**.
-4. Go to **Authentication → Sign In / Providers** (it may be labelled **Providers**) and check that **Email** is enabled. Leave the other settings as they are. The app accepts codes of any length from 6 to 10 digits.
+4. Type `{{ .Token }}` exactly as shown, with double curly braces, a dot and a capital T. Supabase replaces it with the code.
+5. Go to **Authentication → Sign In / Providers** (it may be labelled **Providers**) and check that **Email** is enabled. Leave the other settings as they are. The app accepts codes of any length from 6 to 10 digits.
 
 ---
 
