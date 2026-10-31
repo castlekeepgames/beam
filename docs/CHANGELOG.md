@@ -43,3 +43,7 @@ Oldest first.
 - 57 unit tests (added share text, notification wording, Keep, VAPID key); Edge Functions type-checked with Deno.
 ## 2026-10-31 — Phases 2b–5 (complete)
 - Functions deployed, push key stored as a secret, app deployed, and the device checklists approved on Android and Windows. Every planned phase is done; only the "Later" ideas remain.
+
+## 2026-10-31 — Phase 6: QR codes (built; awaiting device testing)
+- **QR** button on link, text and file cards opens a scannable code. Files use a 15-minute download link with a countdown and **New link**.
+- The QR encoder (`uqr`, no dependencies) loads only when needed. 66 unit tests; codes verified with an independent decoder.

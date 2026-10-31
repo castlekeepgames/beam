@@ -65,8 +65,14 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Keyboard shortcut on desktop: Ctrl+Enter to send
 - [x] **You:** run the Phase 5 checklist (approved 2026-10-31)
 
+## Phase 6 — QR codes
+- [x] **QR** button on link, text and file cards; full-screen code with the link/text underneath
+- [x] Files: QR holds a 15-minute signed download link (original file name), with a countdown and **New link**
+- [x] Text over 600 characters explains it's too long and suggests Copy
+- [x] QR encoder (`uqr`) loaded only when the dialog opens
+- [ ] **You:** run the Phase 6 checklist
+
 ## Later (not started)
 - [ ] Windows tray app (Tauri) with global hotkey to send clipboard and auto-copy incoming text
 - [ ] End-to-end encryption
-- [ ] QR code to open a link on the other device
 - [ ] Search / longer history

@@ -150,3 +150,16 @@ Set up per SETUP.md section 10 first. Only works in the installed app on Android
 - [ ] **Empty state:** with no items, the empty box shows a tip (share sheet on Android; drag and drop / Ctrl+Enter on Windows).
 - [ ] **Ctrl+Enter (Windows):** type text and press Ctrl+Enter to send. Plain Enter makes a new line.
 - [ ] **Phone layout:** on every card, the buttons (Copy / Open / Download, Keep, Delete) fit on one row. Long text shows **Show more** under it.
+---
+
+## Phase 6 — QR codes
+
+Use a phone that **isn't** signed in to Beam (a friend's, or your phone's camera while Beam shows the code on the PC).
+- [ ] **Link:** on the PC, tap **QR** on a link item. Point a phone camera at the screen and the link opens on that phone.
+- [ ] **Text:** tap **QR** on a short text item. Scanning shows the text (most camera apps offer Copy).
+- [ ] **Long text:** **QR** on a very long text item says it's too long and suggests Copy.
+- [ ] **File:** tap **QR** on a file item. The dialog shows the file name, size and a countdown from about 15:00. Scanning downloads the file on the other phone with its original name.
+- [ ] **Expiry:** leave the file QR open for 15 minutes (or come back later). It says the link has expired and offers **New link**, which shows a fresh code. The old code no longer downloads.
+- [ ] **Closing:** **Close**, tapping outside the white box, and **Esc** on the PC all close the dialog.
+- [ ] **Dark mode:** the code still scans with the phone in dark mode (it's always black on white).
+- [ ] **Phone layout:** cards still fit their buttons on one row (Open · Copy · QR · Keep · Delete).

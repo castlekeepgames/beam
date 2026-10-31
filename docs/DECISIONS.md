@@ -140,3 +140,16 @@ One entry per meaningful decision, newest at the bottom.
 - `npm:web-push`. It relies on Node crypto, which works less reliably in Deno than WebCrypto.
 - Database webhooks configured in the dashboard. They'd be untracked dashboard settings.
 - Storing a shared secret in Supabase Vault. It's an extra manual step, and the idempotent design above makes it unnecessary.
+### 2026-10-31 — QR codes (Phase 6)
+**Decision:**
+- **What gets a QR button:** link, text and file cards. Tapping it opens a full-screen dialog with the code, which loads only when opened.
+- **Library:** `uqr` (from the unjs project). It has no dependencies and is about 5 KB compressed. We draw the SVG ourselves from its grid of squares, with one path per horizontal run, instead of injecting markup the library generates.
+- **Scanning:** medium error correction, black squares on a white card with a 4-square quiet margin, so it scans in dark mode too. Text over 600 characters isn't encoded, because codes get too dense to read off a screen; the dialog suggests Copy instead. Verified by decoding generated codes with an independent reader (`jsQR`), including a 539-character signed file link.
+- **Files:** the code holds a 15-minute Supabase signed URL with `download=<original name>`, so any phone can download the file without Beam. The dialog shows a countdown and offers **New link** once it expires.
+
+**Trade-off accepted:** anyone who scans or photographs a file's code within those 15 minutes can download that file. The dialog says so.
+
+**Rejected:**
+- `qrcode`: three dependencies, including a command-line parser.
+- Writing our own QR encoder: not "a few lines".
+- Longer file links: they widen the window in which a photographed code still works.
