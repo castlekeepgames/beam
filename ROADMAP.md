@@ -51,19 +51,19 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Skip the source device; clear expired subscriptions (404/410)
 - [x] Notification click opens the app on that item (scroll + highlight); no notification when Beam is in front
 - [x] Deploy `send-push` + set `VAPID_KEYS` secret (2026-10-31)
-- [ ] **You:** enable notifications on each device and run the Phase 3 checklist
+- [x] **You:** enable notifications on each device and run the Phase 3 checklist (approved 2026-10-31)
 
 ## Phase 4 — Android share sheet
 - [x] `share_target` in manifest (POST, multipart, text + url + files)
 - [x] Service worker handles share POST, stashes it in Cache Storage and hands off to the app
 - [x] Share flow sends immediately with a confirmation toast
-- [ ] **You:** test sharing from Chrome, Photos, and a messaging app
+- [x] **You:** test sharing from Chrome, Photos, and a messaging app (approved 2026-10-31)
 
 ## Phase 5 — Cleanup and polish
 - [x] "Keep" toggle to exempt an item from expiry (un-keeping gives it a fresh 24 hours)
 - [x] Empty states, error states (with Try again), offline banner
 - [x] Keyboard shortcut on desktop: Ctrl+Enter to send
-- [ ] **You:** run the Phase 5 checklist
+- [x] **You:** run the Phase 5 checklist (approved 2026-10-31)
 
 ## Later (not started)
 - [ ] Windows tray app (Tauri) with global hotkey to send clipboard and auto-copy incoming text

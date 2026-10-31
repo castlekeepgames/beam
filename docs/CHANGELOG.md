@@ -41,3 +41,5 @@ Oldest first.
 - **4 Share sheet:** Beam appears in Android's share menu for text, links and files, sends immediately, and confirms with a toast.
 - **5 Polish:** a Keep toggle, offline banner, Try again on errors, a richer empty state, Ctrl+Enter to send, and compact card buttons.
 - 57 unit tests (added share text, notification wording, Keep, VAPID key); Edge Functions type-checked with Deno.
+## 2026-10-31 — Phases 2b–5 (complete)
+- Functions deployed, push key stored as a secret, app deployed, and the device checklists approved on Android and Windows. Every planned phase is done; only the "Later" ideas remain.

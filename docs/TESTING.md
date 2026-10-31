@@ -97,6 +97,8 @@ Do these after SETUP.md section 7 (migration + deploy), with Beam open on both d
 
 ## Phase 2b — Cleanup
 
+**Status:** approved on Android and Windows, 2026-10-31.
+
 Hard to watch in real time. Check it over a day.
 - [ ] In Supabase, **Integrations → Cron** (or **Database → Cron**) shows a job **beam-cleanup** scheduled `7 * * * *`, and its recent runs succeed.
 - [ ] **Edge Functions → cleanup → Logs** show `cleanup: removed N orphaned file(s)` each hour.
@@ -106,6 +108,8 @@ Hard to watch in real time. Check it over a day.
 ---
 
 ## Phase 3 — Notifications
+
+**Status:** approved on Android and Windows, 2026-10-31.
 
 Set up per SETUP.md section 9 first.
 - [ ] **Android:** device menu → Notifications → **Enable** → Allow. It now says "On".
@@ -122,6 +126,8 @@ Set up per SETUP.md section 9 first.
 
 ## Phase 4 — Android share sheet
 
+**Status:** approved on Android and Windows, 2026-10-31.
+
 Set up per SETUP.md section 10 first. Only works in the installed app on Android.
 - [ ] **Chrome:** open any web page, tap **Share → Beam**. Beam opens, shows "Shared to Beam ✓", and the PC gets the page as a link with **Open**.
 - [ ] **Photos:** share one photo, then three photos at once. Each uploads with progress and appears on the PC with a thumbnail.
@@ -133,6 +139,8 @@ Set up per SETUP.md section 10 first. Only works in the installed app on Android
 ---
 
 ## Phase 5 — Polish
+
+**Status:** approved on Android and Windows, 2026-10-31.
 
 - [ ] **Keep:** tap **Keep** on an item. A "KEPT" badge appears on both devices, and the button says **Unkeep**.
 - [ ] **Keep survives expiry:** a kept item is still there after 24 hours (check the next day).
