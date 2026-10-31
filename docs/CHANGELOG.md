@@ -31,3 +31,4 @@ Oldest first.
 - Download through a short-lived signed URL, with progress, saved under the original file name.
 - Deleting a file item also removes its stored files.
 - 42 unit tests (added file names, sizes and paths).
+- Added a **Photos** button on touch screens that opens Android's Photos picker.

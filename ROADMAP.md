@@ -29,6 +29,7 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 ## Phase 2 — Files
 - [x] Private `files` storage bucket + policies (migration written; you apply it, SETUP section 7)
 - [x] File picker (multiple files) and drag-and-drop on desktop
+- [x] "Photos" button on touch screens (opens Android's Photos picker)
 - [x] 50 MB cap with friendly error (Supabase Free plan limit; see DECISIONS)
 - [x] Upload/download progress (uploads one at a time, cancellable)
 - [x] Image thumbnails in the list (generated on the sending device)

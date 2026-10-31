@@ -72,7 +72,9 @@ Do these after SETUP.md section 7 (migration + deploy), with Beam open on both d
 - [ ] **Windows:** click **Files…**, pick one file (e.g. a PDF). An upload row with a progress bar appears, then the file shows at the top of the list with its icon, name and size.
 - [ ] **Windows:** pick 3 files at once. They upload one after another (the others say "Waiting…"), and each becomes its own item.
 - [ ] **Windows:** drag a file from Explorer onto the Beam window. A "Drop files to send" overlay appears, and dropping the file sends it.
-- [ ] **Android:** tap **Files…**. The Android picker opens. Pick a photo and it uploads with progress.
+- [ ] **Android:** tap **Files…**. The Android picker opens (Camera / Video / Files). Pick a file and it uploads with progress.
+- [ ] **Android:** tap **Photos**. Android's Photos picker opens, showing your recent photos and albums. Select two or more photos and videos; each uploads as its own item.
+- [ ] **Windows:** there is no Photos button (only Paste from clipboard, Files… and Send).
 - [ ] **Too big:** try a file over 50 MB. You get a "…is NN MB. Beam's limit is 50 MB per file." message and nothing uploads.
 - [ ] **Cancel:** start a large upload (20–50 MB) and tap **Cancel**. You see "Cancelled …", and no item appears on either device.
 

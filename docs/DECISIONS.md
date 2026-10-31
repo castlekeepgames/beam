@@ -111,3 +111,7 @@ One entry per meaningful decision, newest at the bottom.
 - Upgrading to Supabase Pro (about $25/month) just for the 100 MB cap.
 - The TUS resumable-upload library: an extra dependency, and not needed at 50 MB.
 - Loading full images as previews: wasteful on mobile data.
+### 2026-10-31 — Separate "Photos" button on touch screens
+**Decision:** Next to **Files…**, touch screens get a **Photos** button whose file input only accepts `image/*,video/*`. Android then opens its Photos picker (recent photos and albums) instead of the Camera / Video / Files chooser. The button is hidden when the main pointer is a mouse (`pointer: coarse`), so Windows only shows **Files…**.
+**Why:** You asked for a direct way into your photos. An input that accepts any file type can't open Android's Photos picker, so we need two buttons.
+**Rejected:** Limiting **Files…** to images, which would stop you sending documents from the phone.

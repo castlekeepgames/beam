@@ -14,7 +14,6 @@ interface Props {
 export function Composer({ onSend, onFiles, notify }: Props) {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
-  const fileInput = useRef<HTMLInputElement>(null)
 
   const isBlank = text.trim() === ''
   const tooLong = text.length > MAX_TEXT_LENGTH
@@ -70,25 +69,40 @@ export function Composer({ onSend, onFiles, notify }: Props) {
           <span className="sm:hidden">Paste</span>
           <span className="hidden sm:inline">Paste from clipboard</span>
         </Button>
-        <Button variant="secondary" onClick={() => fileInput.current?.click()}>
-          Files…
-        </Button>
-        <input
-          ref={fileInput}
-          type="file"
-          multiple
-          hidden
-          onChange={(e) => {
-            const files = Array.from(e.target.files ?? [])
-            e.target.value = '' // allow picking the same file again
-            if (files.length) onFiles(files)
-          }}
-        />
+        {/* Images/videos only, so Android opens its Photos picker. Touch screens only. */}
+        <span className="hidden pointer-coarse:contents">
+          <PickButton label="Photos" accept="image/*,video/*" onFiles={onFiles} />
+        </span>
+        <PickButton label="Files…" onFiles={onFiles} />
         <span className="flex-1" />
         <Button onClick={send} disabled={isBlank || tooLong || sending} className="min-w-20">
           {sending ? 'Sending…' : 'Send'}
         </Button>
       </div>
     </section>
+  )
+}
+
+/** A button that opens the system file picker (several files at once). */
+function PickButton({ label, accept, onFiles }: { label: string; accept?: string; onFiles: (files: File[]) => void }) {
+  const input = useRef<HTMLInputElement>(null)
+  return (
+    <>
+      <Button variant="secondary" onClick={() => input.current?.click()}>
+        {label}
+      </Button>
+      <input
+        ref={input}
+        type="file"
+        multiple
+        accept={accept}
+        hidden
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? [])
+          e.target.value = '' // allow picking the same file again
+          if (files.length) onFiles(files)
+        }}
+      />
+    </>
   )
 }
