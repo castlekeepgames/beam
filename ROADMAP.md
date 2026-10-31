@@ -41,8 +41,8 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 ## Phase 2b — Cleanup (moved up from Phase 5 so the 1 GB free storage never fills)
 - [x] Hourly pg_cron job deletes expired rows, then calls the `cleanup` Edge Function to delete files with no row (expired, deleted, abandoned uploads)
 - [x] Supabase CLI added as a dev dependency (`npx supabase`), project config in `supabase/config.toml`
-- [ ] **You:** CLI sign-in + link, mark earlier migrations applied, push new migrations (`docs/SETUP.md` section 8)
-- [ ] Deploy `cleanup` function (I do this once you've linked)
+- [x] **You:** CLI sign-in + link, mark earlier migrations applied, push new migrations (`docs/SETUP.md` section 8)
+- [x] Deploy `cleanup` function (deployed and smoke-tested 2026-10-31)
 
 ## Phase 3 — Notifications
 - [x] VAPID keys generated; public key in `src/lib/push.ts`, private key goes to the `VAPID_KEYS` function secret
@@ -50,7 +50,7 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] `send-push` Edge Function + `items` insert trigger (pg_net)
 - [x] Skip the source device; clear expired subscriptions (404/410)
 - [x] Notification click opens the app on that item (scroll + highlight); no notification when Beam is in front
-- [ ] Deploy `send-push` + set `VAPID_KEYS` secret (I do this once you've linked)
+- [x] Deploy `send-push` + set `VAPID_KEYS` secret (2026-10-31)
 - [ ] **You:** enable notifications on each device and run the Phase 3 checklist
 
 ## Phase 4 — Android share sheet
