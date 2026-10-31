@@ -157,7 +157,8 @@ Set up per SETUP.md section 10 first. Only works in the installed app on Android
 Use a phone that **isn't** signed in to Beam (a friend's, or your phone's camera while Beam shows the code on the PC).
 - [ ] **Link:** on the PC, tap **QR** on a link item. Point a phone camera at the screen and the link opens on that phone.
 - [ ] **Text:** tap **QR** on a short text item. Scanning opens a "Shared from Beam" page in the phone's browser showing the text, with **Copy text**. No sign-in is asked for.
-- [ ] **Long text:** **QR** on a very long text item says it's too long and suggests Copy.
+- [ ] **Medium text (a paragraph, ~500–700 characters):** **QR** shows a code (denser than a short one) that still scans and opens the full text.
+- [ ] **Very long text (a page or more):** **QR** says it's too long and suggests Copy or sending it as a file.
 - [ ] **File:** tap **QR** on a file item. The dialog shows the file name, size and a countdown from about 15:00. Scanning downloads the file on the other phone with its original name.
 - [ ] **Expiry:** leave the file QR open for 15 minutes (or come back later). It says the link has expired and offers **New link**, which shows a fresh code. The old code no longer downloads.
 - [ ] **Closing:** **Close**, tapping outside the white box, and **Esc** on the PC all close the dialog.

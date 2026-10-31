@@ -48,3 +48,4 @@ Oldest first.
 - **QR** button on link, text and file cards opens a scannable code. Files use a 15-minute download link with a countdown and **New link**.
 - The QR encoder (`uqr`, no dependencies) loads only when needed. 66 unit tests; codes verified with an independent decoder.
 - Fix: text QR codes now open a "Shared from Beam" page with the text and a Copy button. Raw-text codes failed on some phones with "app not found". The text travels in the link's # part and is never uploaded. 70 unit tests.
+- Text QR codes are compressed and can be denser (up to 1,000 characters, shown larger on the PC), so typical paragraphs now fit. 73 unit tests.

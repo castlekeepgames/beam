@@ -68,7 +68,7 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 ## Phase 6 — QR codes
 - [x] **QR** button on link, text and file cards; full-screen code with the link/text underneath
 - [x] Files: QR holds a 15-minute signed download link (original file name), with a countdown and **New link**
-- [x] Text QR opens a "Shared from Beam" page (text carried in the link's #fragment); text too long for a scannable code (about 400+ characters) suggests Copy
+- [x] Text QR opens a "Shared from Beam" page (text carried in the link's #fragment); text is compressed when that's shorter, so typical messages up to ~700 characters fit; codes over 600 characters use denser error correction (hard cap 1,000) and display larger on wide screens; anything longer suggests Copy
 - [x] QR encoder (`uqr`) loaded only when the dialog opens
 - [ ] **You:** run the Phase 6 checklist
 

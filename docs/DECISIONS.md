@@ -159,3 +159,14 @@ One entry per meaningful decision, newest at the bottom.
 **Rejected:**
 - Uploading the text and encoding a link to it: that stores it online and needs a server change.
 - Keeping raw text and adding a warning: it would still fail on the phones that need it most.
+### 2026-10-31 — Compress text in QR links; allow denser codes
+**Decision:**
+- **Compression:** text is deflate-compressed with the browser's built-in `CompressionStream('deflate-raw')` and encoded as `#z=<base64url>` whenever that's shorter than the plain `#t=` form. The shared-text page decompresses it with `DecompressionStream`.
+- **Limits:** codes up to 600 characters keep medium error correction. From 601 to 1,000 characters they use low error correction (version 22 at most) and display larger on wide screens.
+- **Checked:** a 1,000-character code decodes with an independent reader even at 2 px per square.
+
+**Why:** a ~600-character message you sent was rejected as "too long" after the switch to link-based codes, because base64 adds about a third. Compression roughly halves ordinary prose, so messages like that now fit with room to spare.
+
+**Rejected:**
+- A compression library (e.g. lz-string). The browser built-ins are enough and add nothing to the bundle.
+- Going beyond 1,000 characters. Codes that dense become unreliable to scan off a phone screen; Copy or sending a file covers longer text.
