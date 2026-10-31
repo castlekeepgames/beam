@@ -164,3 +164,18 @@ Use a phone that **isn't** signed in to Beam (a friend's, or your phone's camera
 - [ ] **Closing:** **Close**, tapping outside the white box, and **Esc** on the PC all close the dialog.
 - [ ] **Dark mode:** the code still scans with the phone in dark mode (it's always black on white).
 - [ ] **Phone layout:** cards still fit their buttons on one row (Open · Copy · QR · Keep · Delete).
+---
+
+## Phase 7 — Receive codes (someone sends to you)
+
+You need a second phone that isn't signed in to Beam (a friend's, or a browser in private/incognito mode).
+- [ ] **Open:** in Beam, tap **Receive** (top right). A QR code appears with "Works for 10:00 · up to 20 items", counting down.
+- [ ] **Guest page:** scan it with the other phone. A "Send to Beam" page opens with no sign-in, showing the countdown and "20 items left".
+- [ ] **Text:** the guest types a message and taps **Send**. It shows "Sent ✓". Within a couple of seconds it appears on **all** your devices labelled **Guest**, and the Receive dialog shows "1 received".
+- [ ] **Link:** the guest sends just a URL. It arrives as a link with **Open**.
+- [ ] **Photos and files:** the guest taps **Photos**, picks two pictures, and sees a progress bar for each. Both arrive as file items you can **Download** (no thumbnail for guest photos).
+- [ ] **Over 50 MB:** a guest file over 50 MB shows a "limit is 50 MB" message and isn't sent.
+- [ ] **Notification:** with Beam closed on your phone, a guest send gives a "From a guest" notification.
+- [ ] **Stop:** tap **Stop receiving**. On the guest page, the next send fails with "The code expired", and reloading it says the code isn't accepting anything.
+- [ ] **Expiry:** leave a code for 10 minutes. The dialog says it has expired and offers **New code**. The old code no longer works on the guest page.
+- [ ] **Privacy:** the guest page never shows any of your items, names or devices.

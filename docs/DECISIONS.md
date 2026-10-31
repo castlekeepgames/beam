@@ -170,3 +170,20 @@ One entry per meaningful decision, newest at the bottom.
 **Rejected:**
 - A compression library (e.g. lz-string). The browser built-ins are enough and add nothing to the bundle.
 - Going beyond 1,000 characters. Codes that dense become unreliable to scan off a phone screen; Copy or sending a file covers longer text.
+### 2026-10-31 — Receive codes: guests can send to me (Phase 7)
+**Decision:**
+- **How it works:** a **Receive** button shows a QR code for `…/beam/#r=<token>`. The token is 32 random bytes, and only its SHA-256 hash is stored, in `receive_codes`. The guest page calls the `receive` Edge Function, which checks the hash and inserts items into my account with the service role, with `from_guest = true`.
+- **Limits:** a code works for **10 minutes** (database default, hard maximum 1 hour) and **20 items**, and stops when I close the dialog. Each send uses up one item atomically through `beam_claim_receive()`, which only the service role can call.
+- **Files take two steps:**
+  1. `upload` uses up one item and returns a Storage **signed upload token** for `<owner>/<new item id>/<safe name>`. The guest uploads straight to Storage, with progress.
+  2. `finish` confirms the object exists, then inserts the item, reading its size and type from Storage.
+  - Uploads that are never finished are swept up by the hourly cleanup, as orphaned files.
+- **Guests can only add.** The function never returns anything about my data, and the guest page shows only the countdown and how many items are left.
+- **No service worker for guests:** the guest page and the shared-text page don't register Beam's service worker, so scanning a code doesn't install anything on a stranger's phone.
+- **Shared code:** link detection and safe file names moved to `supabase/functions/_shared` (plain TypeScript), so the app and the functions classify and name things identically.
+- **Database changes:** the CLI turned out to apply migrations through a temporary login role, so Claude can run `db push` without your database password.
+
+**Rejected:**
+- Codes that stay valid until stopped: risky if photographed.
+- Single-use codes: inconvenient for sending several photos.
+- Putting a Supabase key on the guest page with an RLS policy for guests: it would make guest permissions part of the database's general rules instead of one small function.

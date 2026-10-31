@@ -72,6 +72,15 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] QR encoder (`uqr`) loaded only when the dialog opens
 - [ ] **You:** run the Phase 6 checklist
 
+## Phase 7 — Receive codes (guests send to me)
+- [x] `receive_codes` table (token hash only), `items.from_guest`, atomic claim function
+- [x] `receive` Edge Function: check, text, file upload via one-time upload token, finish
+- [x] **Receive** button: QR + countdown + count received; closing it stops the code; **New code** after expiry
+- [x] Guest "Send to Beam" page (no sign-in): text, Photos/Files with progress, items left, countdown
+- [x] Guest items labelled "Guest" and notify as "From a guest"
+- [x] Migration applied and functions deployed by Claude (CLI no longer needs your password)
+- [ ] **You:** run the Phase 7 checklist with a second phone
+
 ## Later (not started)
 - [ ] Windows tray app (Tauri) with global hotkey to send clipboard and auto-copy incoming text
 - [ ] End-to-end encryption

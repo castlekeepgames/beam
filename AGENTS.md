@@ -30,7 +30,7 @@ Non-goals for now: multiple users/sharing with others, iOS, a native Windows tra
   - Postgres with Row Level Security on every table.
   - Realtime: subscribe to inserts on `items` for the current user.
   - Storage: private bucket `files`, accessed via signed URLs only.
-  - Edge Functions (Deno): `send-push` (web push on new item) and `cleanup` (deletes stored files whose item row is gone). Deployed with `verify_jwt = false` (see `supabase/config.toml`), so they must stay safe to call by anyone: take no secrets or content from the caller, read everything from the database, and be idempotent.
+  - Edge Functions (Deno): `send-push` (web push on new item), `cleanup` (deletes stored files whose item row is gone) and `receive` (guests sending through a Receive code: check / text / upload / finish). Code shared by the app and functions lives in `supabase/functions/_shared` (plain TypeScript, no Deno APIs). Deployed with `verify_jwt = false` (see `supabase/config.toml`), so they must stay safe to call by anyone: take no secrets or content from the caller, read everything from the database, and be idempotent.
   - Supabase CLI is a dev dependency: `npx supabase db push` applies migrations, `npx supabase functions deploy <name>` deploys a function. `npm run functions:check` type-checks functions with Deno.
   - Scheduling: pg_cron (`beam-cleanup` job, hourly) deletes expired, non-kept rows and calls `cleanup`; an `items` insert trigger calls `send-push` through pg_net.
 - **Push:** standard Web Push with VAPID keys, sent from the `send-push` Edge Function.
@@ -54,6 +54,10 @@ Prefer well-maintained libraries over hand-rolled code, but don't add a dependen
 - `thumb_path` text null (small JPEG thumbnail for images, generated on the sending device)
 - `kept` boolean default false (exempt from expiry; owners may update only `kept` and `expires_at`)
 - `pushed_at` timestamptz null (set by `send-push` when it claims an item; never by clients)
+- `from_guest` boolean default false (sent by someone else through a Receive code)
+
+`receive_codes` (Receive QR codes: guests can send to me for 10 minutes)
+- `id`, `user_id`, `token_hash` (SHA-256 hex; the token itself is never stored), `created_at`, `expires_at` (default +10 min, max +1 h), `max_items` (default 20), `used_items`, `revoked_at`. Owners insert and set `revoked_at`; only the `receive` function counts uses (`beam_claim_receive`).
 
 RLS: users can select/insert/delete only rows where `user_id = auth.uid()`. Storage policies restrict `files/<user_id>/...` to that user.
 

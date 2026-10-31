@@ -49,3 +49,7 @@ Oldest first.
 - The QR encoder (`uqr`, no dependencies) loads only when needed. 66 unit tests; codes verified with an independent decoder.
 - Fix: text QR codes now open a "Shared from Beam" page with the text and a Copy button. Raw-text codes failed on some phones with "app not found". The text travels in the link's # part and is never uploaded. 70 unit tests.
 - Text QR codes are compressed and can be denser (up to 1,000 characters, shown larger on the PC), so typical paragraphs now fit. 73 unit tests.
+
+## 2026-10-31 — Phase 7: Receive codes (built and deployed; awaiting device testing)
+- **Receive** button shows a QR code. Anyone who scans it gets a "Send to Beam" page to send you text, links, photos and files, with no app or sign-in. The code works for 10 minutes or 20 items, stops when you close it, and items arrive labelled **Guest** (notification: "From a guest").
+- New `receive_codes` table and `receive` Edge Function; link and file-name helpers shared between the app and the functions. 77 unit tests.
