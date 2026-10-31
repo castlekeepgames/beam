@@ -61,3 +61,31 @@ Follow `docs/SETUP.md` section 6, then sign in on each device.
 
 ### G. Expiry (check the next day)
 - [ ] Items older than 24 hours no longer appear in the list. They're deleted from the database in Phase 5.
+
+---
+
+## Phase 2 — Files
+
+Do these after SETUP.md section 7 (migration + deploy), with Beam open on both devices.
+
+### A. Sending files
+- [ ] **Windows:** click **Files…**, pick one file (e.g. a PDF). An upload row with a progress bar appears, then the file shows at the top of the list with its icon, name and size.
+- [ ] **Windows:** pick 3 files at once. They upload one after another (the others say "Waiting…"), and each becomes its own item.
+- [ ] **Windows:** drag a file from Explorer onto the Beam window. A "Drop files to send" overlay appears, and dropping the file sends it.
+- [ ] **Android:** tap **Files…**. The Android picker opens. Pick a photo and it uploads with progress.
+- [ ] **Too big:** try a file over 50 MB. You get a "…is NN MB. Beam's limit is 50 MB per file." message and nothing uploads.
+- [ ] **Cancel:** start a large upload (20–50 MB) and tap **Cancel**. You see "Cancelled …", and no item appears on either device.
+
+### B. Receiving and downloading
+- [ ] A file sent from the PC appears on the phone within a couple of seconds, with the PC's name and a brief highlight.
+- [ ] **Photos** (JPEG/PNG) show a small thumbnail in the list on both devices. Other files show an extension badge (PDF, ZIP…).
+- [ ] **Android:** tap **Download**. The button shows "Downloading NN%", then the file appears in your Downloads with its original name and opens correctly.
+- [ ] **Windows:** **Download** saves the file with its original name (including spaces or accents) and it opens correctly.
+- [ ] A file with an unusual name (e.g. `Café menu (final).pdf`) downloads with that exact name.
+
+### C. Deleting
+- [ ] Delete a file item on one device. It disappears on both devices.
+- [ ] In Supabase, **Storage → files → (your user id folder)**: the deleted item's folder is gone, or empty.
+
+### D. Problems to report
+- [ ] Note any upload that fails and the exact message shown.

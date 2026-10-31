@@ -96,3 +96,18 @@ One entry per meaningful decision, newest at the bottom.
 - **"Open" only follows http(s) URLs,** even if the database somehow holds something else.
 
 **Why:** These match the spec's behaviour notes (clipboard only on a tap, catch up after reconnecting, never highlight on the device an item came from) while keeping the code small.
+### 2026-10-31 — Phase 2 file handling
+**Decision:**
+- **The file cap is 50 MB, not 100 MB.** That's the most the Supabase Free plan accepts per file. It's enforced in the app (with a friendly message before upload), on the bucket (`file_size_limit`) and in the `items_file_size` check.
+- **Upload with progress through a direct HTTP request** to Supabase Storage's upload endpoint, instead of `supabase-js`'s upload, which doesn't report progress. Files upload one at a time, and each one can be cancelled.
+- **Storage paths:** `<user_id>/<item_id>/<safe name>`. The item id is a client-side UUID, so the path is known up front. Storage only accepts a limited set of characters in object names, so the stored name is a cleaned-up version. The original name is kept in `items.file_name` and used when you download.
+- **The item row is inserted only after the upload finishes,** so other devices never see a half-uploaded file. If the insert fails, the uploaded objects are removed.
+- **Thumbnails are made on the sending device:** a JPEG up to 320 px, saved to `thumb.jpg` next to the file and recorded in the new `items.thumb_path` column. Supabase's image resizing is a paid feature. If an image can't be decoded in the browser (e.g. HEIC), it simply has no thumbnail.
+- **Downloads** use a 60-second signed URL fetched with progress, then save through a temporary blob link with the original file name. At 50 MB a whole file in memory is fine.
+- **Deleting a file item** deletes the row first (so it disappears everywhere at once), then the storage objects. Anything left behind is swept up by the cleanup job.
+- **The cleanup job moves up to "Phase 2b",** straight after files, so the Free plan's 1 GB of storage can't fill up with expired files.
+
+**Rejected:**
+- Upgrading to Supabase Pro (about $25/month) just for the 100 MB cap.
+- The TUS resumable-upload library: an extra dependency, and not needed at 50 MB.
+- Loading full images as previews: wasteful on mobile data.

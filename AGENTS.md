@@ -16,7 +16,7 @@ This file is the source of truth for how to work on this project. Read it fully 
 2. **Receive:** new items appear instantly on every other signed-in device. Each item has a one-tap action: Copy (text), Open (link), Download (file).
 3. **Notify:** if the app isn't open on the receiving device, it gets a push notification. Tapping it opens the app on that item.
 4. **Share from Android:** Beam appears in Android's share sheet (Web Share Target) and accepts text, URLs and files.
-5. **Ephemeral by default:** items and files auto-delete after 24 hours. File size cap 100 MB per file.
+5. **Ephemeral by default:** items and files auto-delete after 24 hours. File size cap 50 MB per file (the Supabase Free plan's per-file maximum).
 6. **Private:** only my account can read or write my items. Nothing is public.
 
 Non-goals for now: multiple users/sharing with others, iOS, a native Windows tray app (possible later phase, see ROADMAP.md), end-to-end encryption (later phase).
@@ -49,7 +49,11 @@ Prefer well-maintained libraries over hand-rolled code, but don't add a dependen
 - `source_device_id` uuid references devices
 - `created_at` timestamptz default now(), `expires_at` timestamptz default now() + interval '24 hours'
 
+- `thumb_path` text null (small JPEG thumbnail for images, generated on the sending device)
+
 RLS: users can select/insert/delete only rows where `user_id = auth.uid()`. Storage policies restrict `files/<user_id>/...` to that user.
+
+Storage layout: `files/<user_id>/<item_id>/<safe file name>` and `files/<user_id>/<item_id>/thumb.jpg`. The item id is generated on the client so the path is known before the row exists; the row is inserted only after the upload finishes.
 
 Keep all schema changes as SQL migration files in `supabase/migrations/`, never as untracked dashboard edits.
 

@@ -27,12 +27,19 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] **You:** run the Phase 1 checklist in `docs/TESTING.md` on both devices (approved 2026-10-31)
 
 ## Phase 2 — Files
-- [ ] Private `files` storage bucket + policies
-- [ ] File picker (multiple files) and drag-and-drop on desktop
-- [ ] 100 MB cap with friendly error
-- [ ] Upload/download progress
-- [ ] Image thumbnails in the list
-- [ ] Signed-URL download
+- [x] Private `files` storage bucket + policies (migration written; you apply it, SETUP section 7)
+- [x] File picker (multiple files) and drag-and-drop on desktop
+- [x] 50 MB cap with friendly error (Supabase Free plan limit; see DECISIONS)
+- [x] Upload/download progress (uploads one at a time, cancellable)
+- [x] Image thumbnails in the list (generated on the sending device)
+- [x] Signed-URL download
+- [x] Deleting a file item also removes its storage objects
+- [x] TESTING.md checklist for Phase 2
+- [ ] **You:** run the Phase 2 migration, deploy, and run the Phase 2 checklist
+
+## Phase 2b — Cleanup (moved up from Phase 5 so the 1 GB free storage never fills)
+- [ ] `cleanup` Edge Function deletes expired items + files (and orphaned uploads), scheduled hourly
+- [ ] Supabase CLI set up (needed for Edge Functions); mark earlier migrations applied
 
 ## Phase 3 — Notifications
 - [ ] VAPID keys (setup steps in SETUP.md)
@@ -48,7 +55,6 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [ ] Test sharing from Chrome, Photos, and a messaging app
 
 ## Phase 5 — Cleanup and polish
-- [ ] `cleanup` Edge Function deletes expired items + files, scheduled hourly
 - [ ] "Keep" toggle to exempt an item from expiry
 - [ ] Empty states, error states, offline banner
 - [ ] Keyboard shortcut on desktop: Ctrl+Enter to send

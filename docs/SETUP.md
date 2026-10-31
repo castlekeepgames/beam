@@ -157,3 +157,24 @@ From now on, every `git push` to `main` redeploys automatically.
 1. Open the same URL.
 2. Click the **Install** icon at the right end of the address bar (a monitor with a down arrow), then **Install**.
 3. Beam opens in its own window and is added to the Start menu. Sign in.
+
+---
+
+## 7. Phase 2: turn on file storage
+
+Run this once, after pulling the Phase 2 code.
+
+1. In PowerShell, copy the Phase 2 migration to your clipboard:
+   ```powershell
+   Get-Content -Raw "supabase\migrations\20261031090000_files_storage.sql" | Set-Clipboard
+   ```
+2. In Supabase, open **SQL Editor → New query**. Press **Ctrl+A** then **Delete** to clear anything already there, paste with **Ctrl+V**, and click **Run**. Confirm if it warns about destructive operations (that's the line that replaces the file-size check).
+3. You should see **"Success. No rows returned"**.
+4. Check it worked: open **Storage** in the left sidebar. There should be a bucket called **files**, marked **Private**.
+5. Deploy the new code by pushing it (GitHub Actions deploys automatically):
+   ```powershell
+   git push
+   ```
+6. On each device, close Beam completely and reopen it, so the installed app picks up the new version. If the **Files…** button doesn't appear, close and reopen it once more.
+
+> File limits: 50 MB per file, and 1 GB of storage in total on the Free plan. Items expire after 24 hours, and the cleanup job (Phase 2b) deletes their files.
