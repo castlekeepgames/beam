@@ -16,7 +16,12 @@ Beam uses only two services: **Supabase** (database, login, realtime) and **GitH
    ```powershell
    git --version
    ```
-2. Install the project's packages:
+2. Let PowerShell run npm. If `npm` fails with *"npm.ps1 cannot be loaded because running scripts is disabled on this system"*, allow local scripts for your Windows user (type `Y` if asked):
+   ```powershell
+   Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+   ```
+   If you'd rather not change this setting, type `npm.cmd` wherever these docs say `npm` (e.g. `npm.cmd run dev`).
+3. Install the project's packages:
    ```powershell
    npm install
    ```
