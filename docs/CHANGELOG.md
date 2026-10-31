@@ -53,3 +53,6 @@ Oldest first.
 ## 2026-10-31 — Phase 7: Receive codes (built and deployed; awaiting device testing)
 - **Receive** button shows a QR code. Anyone who scans it gets a "Send to Beam" page to send you text, links, photos and files, with no app or sign-in. The code works for 10 minutes or 20 items, stops when you close it, and items arrive labelled **Guest** (notification: "From a guest").
 - New `receive_codes` table and `receive` Edge Function; link and file-name helpers shared between the app and the functions. 77 unit tests.
+
+## 2026-10-31 — Phases 6 and 7 (complete)
+- QR codes and Receive codes approved on real devices.

@@ -154,6 +154,8 @@ Set up per SETUP.md section 10 first. Only works in the installed app on Android
 
 ## Phase 6 — QR codes
 
+**Status:** approved, 2026-10-31.
+
 Use a phone that **isn't** signed in to Beam (a friend's, or your phone's camera while Beam shows the code on the PC).
 - [ ] **Link:** on the PC, tap **QR** on a link item. Point a phone camera at the screen and the link opens on that phone.
 - [ ] **Text:** tap **QR** on a short text item. Scanning opens a "Shared from Beam" page in the phone's browser showing the text, with **Copy text**. No sign-in is asked for.
@@ -167,6 +169,8 @@ Use a phone that **isn't** signed in to Beam (a friend's, or your phone's camera
 ---
 
 ## Phase 7 — Receive codes (someone sends to you)
+
+**Status:** approved, 2026-10-31.
 
 You need a second phone that isn't signed in to Beam (a friend's, or a browser in private/incognito mode).
 - [ ] **Open:** in Beam, tap **Receive** (top right). A QR code appears with "Works for 10:00 · up to 20 items", counting down.

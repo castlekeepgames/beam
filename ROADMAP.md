@@ -70,7 +70,7 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Files: QR holds a 15-minute signed download link (original file name), with a countdown and **New link**
 - [x] Text QR opens a "Shared from Beam" page (text carried in the link's #fragment); text is compressed when that's shorter, so typical messages up to ~700 characters fit; codes over 600 characters use denser error correction (hard cap 1,000) and display larger on wide screens; anything longer suggests Copy
 - [x] QR encoder (`uqr`) loaded only when the dialog opens
-- [ ] **You:** run the Phase 6 checklist
+- [x] **You:** run the Phase 6 checklist (approved 2026-10-31)
 
 ## Phase 7 — Receive codes (guests send to me)
 - [x] `receive_codes` table (token hash only), `items.from_guest`, atomic claim function
@@ -79,7 +79,7 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Guest "Send to Beam" page (no sign-in): text, Photos/Files with progress, items left, countdown
 - [x] Guest items labelled "Guest" and notify as "From a guest"
 - [x] Migration applied and functions deployed by Claude (CLI no longer needs your password)
-- [ ] **You:** run the Phase 7 checklist with a second phone
+- [x] **You:** run the Phase 7 checklist with a second phone (approved 2026-10-31)
 
 ## Later (not started)
 - [ ] Windows tray app (Tauri) with global hotkey to send clipboard and auto-copy incoming text
