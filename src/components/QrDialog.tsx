@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { encode } from 'uqr'
 import { formatBytes } from '../lib/files'
-import { FILE_QR_SECONDS, formatCountdown, qrAvailability, qrPath } from '../lib/qr'
+import { FILE_QR_SECONDS, formatCountdown, qrAvailability, qrPath, qrValue } from '../lib/qr'
 import { signedUrl } from '../lib/storage'
 import type { Item } from '../lib/types'
 import { Button } from './ui'
@@ -42,9 +42,13 @@ export default function QrDialog({ item, onClose }: { item: Item; onClose: () =>
   )
 }
 
+/** Beam's own address, e.g. https://<user>.github.io/beam/ (where the shared-text page lives). */
+const appBaseUrl = () => new URL(import.meta.env.BASE_URL, window.location.origin).href
+
 function TextQr({ item }: { item: Item }) {
   const text = item.content ?? ''
-  if (qrAvailability(item) === 'too-long') {
+  const base = appBaseUrl()
+  if (qrAvailability(item, base) === 'too-long') {
     return (
       <p className="py-6 text-center text-sm text-zinc-600 dark:text-zinc-300">
         This text is too long for a QR code ({text.length.toLocaleString()} characters). Use <strong>Copy</strong>{' '}
@@ -54,11 +58,14 @@ function TextQr({ item }: { item: Item }) {
   }
   return (
     <>
-      <QrCode value={text} />
+      <QrCode value={qrValue(item, base)} />
       {item.kind === 'link' ? (
         <p className="w-full text-center text-sm break-all text-zinc-600 dark:text-zinc-300">{text}</p>
       ) : (
-        <p className="text-center text-sm text-zinc-600 dark:text-zinc-300">Scan with any phone camera to read this text.</p>
+        <p className="text-center text-sm text-zinc-600 dark:text-zinc-300">
+          Scan with any phone camera to open this text in a browser, with a Copy button. The text travels inside the
+          code; nothing is uploaded.
+        </p>
       )}
     </>
   )

@@ -1,24 +1,54 @@
 import { encode } from 'uqr'
 import { describe, expect, it } from 'vitest'
-import { formatCountdown, qrAvailability, QR_MAX_CHARS, qrPath } from './qr'
+import { formatCountdown, qrAvailability, QR_MAX_CHARS, qrPath, qrValue, readSharedText, textViewUrl } from './qr'
+
+const BASE = 'https://castlekeepgames.github.io/beam/'
+
+describe('shared-text links', () => {
+  it('round-trips text, including accents, emoji and new lines', () => {
+    const text = 'Meet at 6 by the café 🔌\nbring the charger'
+    const url = textViewUrl(text, BASE)
+    expect(url.startsWith(`${BASE}#t=`)).toBe(true)
+    expect(readSharedText(new URL(url).hash)).toBe(text)
+  })
+
+  it('uses only URL-safe characters after the #', () => {
+    expect(textViewUrl('??>>~~ ÿÿÿ', BASE).split('#t=')[1]).toMatch(/^[A-Za-z0-9_-]+$/)
+  })
+
+  it('ignores other hashes and corrupt data', () => {
+    expect(readSharedText('')).toBeNull()
+    expect(readSharedText('#item=1')).toBeNull()
+    expect(readSharedText('#t=%%%')).toBeNull()
+    expect(readSharedText('#t=_w')).toBeNull() // not valid UTF-8
+  })
+})
+
+describe('qrValue', () => {
+  it('links encode as themselves; text becomes a shared-text link', () => {
+    expect(qrValue({ kind: 'link', content: 'https://example.com' }, BASE)).toBe('https://example.com')
+    expect(qrValue({ kind: 'text', content: 'hi' }, BASE)).toBe(`${BASE}#t=aGk`)
+  })
+})
 
 describe('qrAvailability', () => {
   it('allows links and short text', () => {
-    expect(qrAvailability({ kind: 'link', content: 'https://example.com', file_path: null })).toBe('ok')
-    expect(qrAvailability({ kind: 'text', content: 'x'.repeat(QR_MAX_CHARS), file_path: null })).toBe('ok')
+    expect(qrAvailability({ kind: 'link', content: 'https://example.com', file_path: null }, BASE)).toBe('ok')
+    expect(qrAvailability({ kind: 'text', content: 'x'.repeat(400), file_path: null }, BASE)).toBe('ok')
   })
 
-  it('flags text that is too long to scan', () => {
-    expect(qrAvailability({ kind: 'text', content: 'x'.repeat(QR_MAX_CHARS + 1), file_path: null })).toBe('too-long')
+  it('flags text whose link would be too long to scan', () => {
+    expect(qrAvailability({ kind: 'text', content: 'x'.repeat(450), file_path: null }, BASE)).toBe('too-long')
+    expect(qrValue({ kind: 'text', content: 'x'.repeat(450) }, BASE).length).toBeGreaterThan(QR_MAX_CHARS)
   })
 
   it('allows files that have a stored object', () => {
-    expect(qrAvailability({ kind: 'file', content: null, file_path: 'u/i/a.pdf' })).toBe('ok')
-    expect(qrAvailability({ kind: 'file', content: null, file_path: null })).toBe('none')
+    expect(qrAvailability({ kind: 'file', content: null, file_path: 'u/i/a.pdf' }, BASE)).toBe('ok')
+    expect(qrAvailability({ kind: 'file', content: null, file_path: null }, BASE)).toBe('none')
   })
 
   it('has nothing to show for empty text', () => {
-    expect(qrAvailability({ kind: 'text', content: '', file_path: null })).toBe('none')
+    expect(qrAvailability({ kind: 'text', content: '', file_path: null }, BASE)).toBe('none')
   })
 })
 
