@@ -1,7 +1,7 @@
-/** 50 MB: the Supabase Free plan's per-file maximum (also enforced by the bucket and the DB). */
-export const MAX_FILE_BYTES = 50 * 1024 * 1024
+import { MAX_FILE_BYTES } from '../../supabase/functions/_shared/names'
 
-export const BUCKET = 'files'
+// Shared with the Edge Functions so guest uploads are named the same way.
+export { BUCKET, MAX_FILE_BYTES, objectPaths, safeObjectName } from '../../supabase/functions/_shared/names'
 
 const UNITS = ['B', 'KB', 'MB', 'GB']
 
@@ -21,31 +21,6 @@ export function formatBytes(bytes: number): string {
 export function fileSizeProblem(file: { name: string; size: number }): string | null {
   if (file.size <= MAX_FILE_BYTES) return null
   return `"${file.name}" is ${formatBytes(file.size)}. Beam's limit is ${formatBytes(MAX_FILE_BYTES)} per file.`
-}
-
-/**
- * Storage only accepts a limited character set in object names, so store a
- * cleaned-up name (the original goes in items.file_name). Keeps the extension.
- */
-export function safeObjectName(fileName: string, maxLength = 100): string {
-  const ascii = fileName
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^A-Za-z0-9._-]+/g, '_')
-    .replace(/_+/g, '_')
-  const ext = ascii.match(/\.[A-Za-z0-9]{1,9}$/)?.[0] ?? ''
-  const stem = ascii
-    .slice(0, ascii.length - ext.length)
-    .replace(/^[._]+/, '') // no hidden files or "../"
-    .slice(0, maxLength - ext.length)
-    .replace(/[._]+$/, '')
-  return (stem || 'file') + ext
-}
-
-/** Object paths for an item: <user>/<item>/<name> and <user>/<item>/thumb.jpg. */
-export function objectPaths(userId: string, itemId: string, fileName: string) {
-  const folder = `${userId}/${itemId}`
-  return { filePath: `${folder}/${safeObjectName(fileName)}`, thumbPath: `${folder}/thumb.jpg` }
 }
 
 /** Image types the browser can reliably decode for a thumbnail. */

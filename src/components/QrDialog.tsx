@@ -1,10 +1,11 @@
 // Loaded lazily (React.lazy) so the QR encoder isn't part of the main bundle.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { encode } from 'uqr'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { formatBytes } from '../lib/files'
-import { FILE_QR_SECONDS, formatCountdown, qrErrorCorrection, qrPath, qrPayload, type QrPayload } from '../lib/qr'
+import { FILE_QR_SECONDS, formatCountdown, qrPayload, type QrPayload } from '../lib/qr'
 import { signedUrl } from '../lib/storage'
 import type { Item } from '../lib/types'
+import { appBaseUrl } from '../lib/url'
+import { QrCode } from './QrCode'
 import { Button } from './ui'
 
 type FileLink = { status: 'loading' } | { status: 'ready'; url: string; expiresAt: number } | { status: 'error' }
@@ -41,9 +42,6 @@ export default function QrDialog({ item, onClose }: { item: Item; onClose: () =>
     </div>
   )
 }
-
-/** Beam's own address, e.g. https://<user>.github.io/beam/ (where the shared-text page lives). */
-const appBaseUrl = () => new URL(import.meta.env.BASE_URL, window.location.origin).href
 
 function TextQr({ item }: { item: Item }) {
   const text = item.content ?? ''
@@ -159,29 +157,5 @@ function FileQr({ item }: { item: Item }) {
         it before then can download the file.
       </p>
     </>
-  )
-}
-
-/** Dark modules on a white card (with quiet zone) so it scans in dark mode too. */
-function QrCode({ value }: { value: string }) {
-  const { path, size } = useMemo(() => {
-    const qr = encode(value, { ecc: qrErrorCorrection(value), border: 0 })
-    return { path: qrPath(qr.data), size: qr.size }
-  }, [value])
-  const quiet = 4
-  return (
-    // Bigger on wider screens: dense codes scan far more reliably when large.
-    <div className="w-full max-w-72 rounded-xl bg-white p-2 sm:max-w-md">
-      <svg
-        viewBox={`${-quiet} ${-quiet} ${size + quiet * 2} ${size + quiet * 2}`}
-        className="block h-auto w-full"
-        shapeRendering="crispEdges"
-        role="img"
-        aria-label="QR code"
-      >
-        <rect x={-quiet} y={-quiet} width={size + quiet * 2} height={size + quiet * 2} fill="#fff" />
-        <path d={path} fill="#000" />
-      </svg>
-    </div>
   )
 }

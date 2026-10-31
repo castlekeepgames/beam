@@ -40,11 +40,47 @@ export async function uploadObject(
   const token = data.session?.access_token
   if (!token) throw new StorageError('Not signed in', 401)
   signal.throwIfAborted()
+  return xhrUpload(
+    'POST',
+    `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encodePath(path)}`,
+    { Authorization: `Bearer ${token}` },
+    body,
+    contentType,
+    onProgress,
+    signal,
+  )
+}
 
+/**
+ * Upload with a one-time upload token from the `receive` function (used by
+ * guests, who aren't signed in). The token only allows this exact path.
+ */
+export function uploadWithToken(
+  path: string,
+  uploadToken: string,
+  body: Blob,
+  contentType: string,
+  onProgress: (fraction: number) => void,
+  signal: AbortSignal,
+): Promise<void> {
+  const url = `${SUPABASE_URL}/storage/v1/object/upload/sign/${BUCKET}/${encodePath(path)}?token=${encodeURIComponent(uploadToken)}`
+  return xhrUpload('PUT', url, {}, body, contentType, onProgress, signal)
+}
+
+function xhrUpload(
+  method: 'POST' | 'PUT',
+  url: string,
+  headers: Record<string, string>,
+  body: Blob,
+  contentType: string,
+  onProgress: (fraction: number) => void,
+  signal: AbortSignal,
+): Promise<void> {
+  signal.throwIfAborted()
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encodePath(path)}`)
-    xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+    xhr.open(method, url)
+    for (const [name, value] of Object.entries(headers)) xhr.setRequestHeader(name, value)
     xhr.setRequestHeader('apikey', SUPABASE_KEY)
     xhr.setRequestHeader('x-upsert', 'false')
     xhr.setRequestHeader('Content-Type', contentType || 'application/octet-stream')

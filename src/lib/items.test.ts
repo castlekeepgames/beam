@@ -19,6 +19,7 @@ function item(id: string, createdMinutesAgo: number, overrides: Partial<Item> = 
     created_at: new Date(created).toISOString(),
     expires_at: new Date(created + 24 * 3600_000).toISOString(),
     kept: false,
+    from_guest: false,
     ...overrides,
   }
 }

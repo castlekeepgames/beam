@@ -94,7 +94,7 @@ export function Composer({ onSend, onFiles, notify }: Props) {
 }
 
 /** A button that opens the system file picker (several files at once). */
-function PickButton({ label, accept, onFiles }: { label: string; accept?: string; onFiles: (files: File[]) => void }) {
+export function PickButton({ label, accept, onFiles }: { label: string; accept?: string; onFiles: (files: File[]) => void }) {
   const input = useRef<HTMLInputElement>(null)
   return (
     <>

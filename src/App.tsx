@@ -1,4 +1,5 @@
 import { DeviceSetup } from './components/DeviceSetup'
+import { GuestSend } from './components/GuestSend'
 import { Home } from './components/Home'
 import { SharedText } from './components/SharedText'
 import { SignIn } from './components/SignIn'
@@ -6,10 +7,13 @@ import { CenteredCard, Logo, Page } from './components/ui'
 import { useDevice } from './hooks/useDevice'
 import { useSession } from './hooks/useSession'
 import { isSharedTextHash } from './lib/qr'
+import { isReceiveHash, receiveTokenFromHash } from './lib/receive'
 import { configError } from './lib/supabase'
 
 // A scanned text QR code (…/beam/#t=… or #z=…) shows just that text, with no sign-in.
 const sharedHash = isSharedTextHash(window.location.hash) ? window.location.hash : null
+// A scanned Receive code (…/beam/#r=…) opens the guest "Send to Beam" page.
+const receiveToken = isReceiveHash(window.location.hash) ? receiveTokenFromHash(window.location.hash) : null
 
 export default function App() {
   if (sharedHash) return <SharedText hash={sharedHash} />
@@ -20,6 +24,7 @@ export default function App() {
       </CenteredCard>
     )
   }
+  if (receiveToken) return <GuestSend token={receiveToken} />
   return <AuthGate />
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { useFileDrop } from '../hooks/useFileDrop'
 import { useOpenItem, useShareIntake } from '../hooks/useIntents'
 import { useItems, type Connection } from '../hooks/useItems'
@@ -13,6 +13,9 @@ import { Settings } from './Settings'
 import { useToast } from './Toast'
 import { UploadList } from './UploadList'
 import { Button, Logo, Page } from './ui'
+
+// Only loaded when someone taps Receive (it includes the QR encoder).
+const ReceiveDialog = lazy(() => import('./ReceiveDialog'))
 
 const CONNECTION_LABEL: Record<Connection, string> = {
   connecting: 'Connecting…',
@@ -49,6 +52,7 @@ export function Home({ userId, device, onRename }: Props) {
   const dragging = useFileDrop(addFiles)
   const online = useOnline()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [receiveOpenedAt, setReceiveOpenedAt] = useState<number | null>(null)
   const now = useNow(30_000)
 
   useShareIntake(sendText, addFiles, notify)
@@ -94,24 +98,40 @@ export function Home({ userId, device, onRename }: Props) {
     [toggleKeep, notify],
   )
 
-  const sourceLabel = (sourceId: string | null) => {
+  const sourceLabel = (item: Item) => {
+    if (item.from_guest) return 'Guest'
+    const sourceId = item.source_device_id
     if (sourceId === device.id) return 'This device'
     return (sourceId && deviceNames[sourceId]) || 'Unknown device'
   }
 
+  // Count guest items that arrive while the Receive dialog is open.
+  const receivedSince = receiveOpenedAt
+    ? items.filter((i) => i.from_guest && Date.parse(i.created_at) >= receiveOpenedAt - 5000).length
+    : 0
+  const closeReceive = useCallback(() => setReceiveOpenedAt(null), [])
+
   return (
     <Page>
-      <header className="mb-4 flex items-center gap-2.5">
+      <header className="mb-4 flex items-center gap-1.5">
         <Logo />
-        <div className="flex-1">
+        <div className="ml-1 flex-1">
           <h1 className="text-lg leading-tight font-semibold">Beam</h1>
           <p className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
             <span className={`h-2 w-2 rounded-full ${CONNECTION_DOT[connection]}`} aria-hidden />
             {CONNECTION_LABEL[connection]}
           </p>
         </div>
-        <Button variant="ghost" onClick={() => setSettingsOpen((v) => !v)} aria-expanded={settingsOpen}>
-          {device.name}
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setReceiveOpenedAt(Date.now())}
+          title="Show a QR code so someone without Beam can send you text or files"
+        >
+          Receive
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => setSettingsOpen((v) => !v)} aria-expanded={settingsOpen}>
+          <span className="max-w-28 truncate sm:max-w-48">{device.name}</span>
           <span aria-hidden>{settingsOpen ? '▴' : '▾'}</span>
         </Button>
       </header>
@@ -158,7 +178,7 @@ export function Home({ userId, device, onRename }: Props) {
               <ItemCard
                 key={item.id}
                 item={item}
-                source={sourceLabel(item.source_device_id)}
+                source={sourceLabel(item)}
                 time={formatRelative(item.created_at, now)}
                 fresh={freshIds.has(item.id)}
                 onCopy={copy}
@@ -177,6 +197,12 @@ export function Home({ userId, device, onRename }: Props) {
             Drop files to send
           </div>
         </div>
+      )}
+
+      {receiveOpenedAt !== null && (
+        <Suspense fallback={null}>
+          <ReceiveDialog received={receivedSince} onClose={closeReceive} />
+        </Suspense>
       )}
 
       {toast}
