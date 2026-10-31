@@ -183,3 +183,26 @@ You need a second phone that isn't signed in to Beam (a friend's, or a browser i
 - [ ] **Stop:** tap **Stop receiving**. On the guest page, the next send fails with "The code expired", and reloading it says the code isn't accepting anything.
 - [ ] **Expiry:** leave a code for 10 minutes. The dialog says it has expired and offers **New code**. The old code no longer works on the guest page.
 - [ ] **Privacy:** the guest page never shows any of your items, names or devices.
+---
+
+## Phase 8 — Quick wins
+
+Close and reopen Beam on each device first (on the PC, Ctrl+Shift+R in the Beam window if needed).
+
+**Pasting images (Windows)**
+- [ ] Press **Win+Shift+S** and snip part of the screen, then click in Beam's text box and press **Ctrl+V**. It uploads straight away as `Screenshot <date> <time>.png` and arrives on the phone with a thumbnail.
+- [ ] Snip again, click on an empty part of the Beam window (not the text box), and press **Ctrl+V**. Same result.
+- [ ] Copy a file in File Explorer (**Ctrl+C**), then **Ctrl+V** in Beam. It's sent with its own name.
+- [ ] Copy some text and press **Ctrl+V** in the box. The text appears in the box as before (not sent as a file).
+- [ ] Copy an image (right-click an image in a web page → **Copy image**), then click **Paste from clipboard**. The image is sent.
+
+**App-icon shortcuts**
+- [ ] **Windows:** right-click Beam's taskbar icon (or its Start menu entry). **Send clipboard** and **Receive from someone** are listed.
+- [ ] **Send clipboard** with text copied: Beam opens and sends it ("Sent from clipboard ✓"), or shows a **Send clipboard** bar to tap if it doesn't have clipboard permission yet.
+- [ ] **Receive from someone:** Beam opens straight into the Receive QR code.
+- [ ] **Android:** long-press the Beam icon. The two shortcuts appear (may take up to a day, or reinstall Beam to get them straight away; see SETUP.md section 10).
+
+**Open link on notifications**
+- [ ] With Beam closed on the phone, send a link from the PC. The notification has an **Open link** button, which opens the page in Chrome directly.
+- [ ] Tapping the notification itself (not the button) still opens Beam on that item.
+- [ ] Text and file notifications have no Open link button.

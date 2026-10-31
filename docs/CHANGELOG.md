@@ -56,3 +56,9 @@ Oldest first.
 
 ## 2026-10-31 — Phases 6 and 7 (complete)
 - QR codes and Receive codes approved on real devices.
+
+## 2026-10-31 — Phase 8: quick wins (built and deployed; awaiting device testing)
+- Paste screenshots, images and files with Ctrl+V (in the box or anywhere on the page); the Paste button sends a copied image.
+- App-icon shortcuts: **Send clipboard** and **Receive**.
+- **Open link** button on notifications for links.
+- 84 unit tests.

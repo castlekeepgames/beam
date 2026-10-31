@@ -81,7 +81,19 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Migration applied and functions deployed by Claude (CLI no longer needs your password)
 - [x] **You:** run the Phase 7 checklist with a second phone (approved 2026-10-31)
 
+## Phase 8 — Quick wins
+- [x] Paste screenshots/images/files: Ctrl+V in the box or anywhere on the page sends them (screenshots get a timestamped name); **Paste** button sends a copied image
+- [x] App-icon shortcuts: **Send clipboard** and **Receive** (Windows taskbar right-click, Android long-press)
+- [x] **Open link** button on link notifications
+- [ ] **You:** run the Phase 8 checklist
+
 ## Later (not started)
 - [ ] Windows tray app (Tauri) with global hotkey to send clipboard and auto-copy incoming text
 - [ ] End-to-end encryption
 - [ ] Search / longer history
+- [ ] Tap a photo to view it full-screen
+- [ ] Your devices list (with Remove) in the device menu
+- [ ] Storage meter and Clear all
+- [ ] Thumbnails for guest photos
+- [ ] Per-item lifetime (1 h / 24 h / 7 days)
+- [ ] Send to one device only

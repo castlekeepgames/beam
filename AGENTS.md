@@ -69,7 +69,7 @@ Keep all schema changes as SQL migration files in `supabase/migrations/`, never 
 
 - **Device identity:** on first launch, register a `devices` row, store its id in localStorage, and let me name the device. Never notify or highlight the device an item came from.
 - **Link detection:** if pasted text is a single URL, save as `kind = 'link'`.
-- **Clipboard:** browsers only allow clipboard reads/writes from a user gesture. Never try to read the clipboard in the background. Show a clear message if permission is denied.
+- **Clipboard:** browsers only allow clipboard reads/writes from a user gesture. Never try to read the clipboard in the background. Show a clear message if permission is denied. The one exception is the **Send clipboard** app-icon shortcut: it's an explicit user action, so it reads straight away only if clipboard permission is already granted; otherwise it shows a one-tap **Send clipboard** bar. It never triggers a permission prompt by itself.
 - **Share target:** use `method: "POST"`, `enctype: "multipart/form-data"` in the manifest. The service worker intercepts the POST, stashes text/files (IndexedDB or Cache), redirects to an in-app route, and the app uploads them. Only works on Android after the PWA is installed from the deployed HTTPS site — it cannot be tested on localhost.
 - **Push:** ask for notification permission only from a button tap, never on page load. Store the subscription on the `devices` row. Trigger `send-push` from a database webhook on `items` insert.
 - **Realtime + reconnect:** when the app regains focus or network, refetch recent items so nothing is missed while the socket was down.

@@ -187,3 +187,11 @@ One entry per meaningful decision, newest at the bottom.
 - Codes that stay valid until stopped: risky if photographed.
 - Single-use codes: inconvenient for sending several photos.
 - Putting a Supabase key on the guest page with an RLS policy for guests: it would make guest permissions part of the database's general rules instead of one small function.
+### 2026-10-31 — Quick wins: image paste, app shortcuts, Open link (Phase 8)
+**Decision:**
+- **Pasting files:** a paste into the text box that contains files (a Win+Shift+S screenshot, or files copied in Explorer) sends them as files. Plain text still pastes normally. A page-wide `paste` listener does the same when no text field has focus. Screenshots named `image.png` (or nameless) are renamed `Screenshot YYYY-MM-DD HH-MM-SS.png`, in local time.
+- **Paste button:** it now tries `navigator.clipboard.read()` first. A copied image is sent as a file straight away. Text still fills the box so you can check it before sending. If permission is refused, it doesn't try again via `readText()`, which would show a second prompt.
+- **App-icon shortcuts** (manifest `shortcuts`): **Send clipboard** (`?action=clipboard`) and **Receive** (`?action=receive`). Send clipboard reads straight away only if the `clipboard-read` permission is already granted and the read succeeds; otherwise it shows a one-tap bar. This keeps to the "no background clipboard reads, no surprise prompts" rule. Shortcut text is sent immediately; that's the point of the shortcut.
+- **Open link:** `send-push` now includes `url` for link items (http/https only, built in `notificationPayload()`). The service worker adds an **Open link** action that calls `clients.openWindow(url)` and checks the URL again. Tapping the notification itself still opens Beam on the item.
+
+**Note:** Android only shows new shortcuts after Chrome refreshes the installed app (up to a day), or after reinstalling. Windows picks them up when the app next starts.
