@@ -9,6 +9,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
+    "functions:check": "npx --yes deno@2.9.6 check supabase/functions/cleanup/index.ts supabase/functions/send-push/index.ts",
     "lint": "oxlint",
     "check": "npm run typecheck && npm run lint && npm test && npm run build",
     "preview": "vite preview"
@@ -25,6 +26,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "^1.89.0",
+    "supabase": "^2.122.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~7.0.2",
     "vite": "^8.3.5",

@@ -34,3 +34,6 @@ supabase/.branches
 *.njsproj
 *.sln
 *.sw?
+
+# Deno lockfile from local 'npm run functions:check' (Supabase resolves deps at deploy)
+deno.lock
