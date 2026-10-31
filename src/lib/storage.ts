@@ -104,9 +104,14 @@ export function saveBlob(blob: Blob, fileName: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
 
-/** Short-lived signed URL for a private object. */
-export async function signedUrl(path: string, seconds: number): Promise<string> {
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, seconds)
+/**
+ * Short-lived signed URL for a private object. With `downloadAs`, opening the
+ * URL downloads the file under that name instead of displaying it.
+ */
+export async function signedUrl(path: string, seconds: number, downloadAs?: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(path, seconds, downloadAs ? { download: downloadAs } : undefined)
   if (error) throw error
   return data.signedUrl
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { extensionLabel, formatBytes } from '../lib/files'
 import { isSafeHttpUrl } from '../lib/links'
 import { describeStorageError, fetchWithProgress, saveBlob, signedUrl, thumbnailUrl } from '../lib/storage'
@@ -7,6 +7,9 @@ import type { Notify } from './Toast'
 import { buttonClass } from './styles'
 import { Button } from './ui'
 import { ProgressBar } from './UploadList'
+
+// Only loaded when someone taps "QR", keeping the encoder out of the main bundle.
+const QrDialog = lazy(() => import('./QrDialog'))
 
 const LONG_TEXT_CHARS = 400
 const LONG_TEXT_LINES = 6
@@ -24,6 +27,8 @@ interface Props {
 
 export function ItemCard({ item, source, time, fresh, onCopy, onDelete, onToggleKeep, notify }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const [showQr, setShowQr] = useState(false)
+  const closeQr = useCallback(() => setShowQr(false), [])
   const content = item.content ?? ''
   const isFile = item.kind === 'file'
   const isLink = item.kind === 'link' && isSafeHttpUrl(content)
@@ -98,6 +103,15 @@ export function ItemCard({ item, source, time, fresh, onCopy, onDelete, onToggle
         )}
         <Button
           size="sm"
+          variant="secondary"
+          onClick={() => setShowQr(true)}
+          aria-label="Show QR code"
+          title="Show a QR code to scan with another phone"
+        >
+          QR
+        </Button>
+        <Button
+          size="sm"
           variant="ghost"
           className="ml-auto"
           onClick={() => onToggleKeep(item)}
@@ -110,6 +124,12 @@ export function ItemCard({ item, source, time, fresh, onCopy, onDelete, onToggle
           Delete
         </Button>
       </div>
+
+      {showQr && (
+        <Suspense fallback={null}>
+          <QrDialog item={item} onClose={closeQr} />
+        </Suspense>
+      )}
     </li>
   )
 }
