@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     .eq('id', itemId)
     .is('pushed_at', null)
     .gt('created_at', new Date(Date.now() - MAX_AGE_MS).toISOString())
-    .select('id, user_id, kind, content, file_name, source_device_id, from_guest')
+    .select('id, user_id, kind, content, file_name, source_device_id, target_device_id, from_guest')
     .maybeSingle()
   if (error) return json({ error: error.message }, 500)
   if (!item) return json({ skipped: true })
@@ -65,8 +65,13 @@ Deno.serve(async (req) => {
 
   const rows = (devices ?? []) as DeviceRow[]
   const sourceName = rows.find((d) => d.id === item.source_device_id)?.name ?? null
-  // Never notify the device the item came from.
-  const targets = rows.filter((d) => d.id !== item.source_device_id && d.push_subscription)
+  // Never notify the device the item came from; items sent to one device notify only that one.
+  const targets = rows.filter(
+    (d) =>
+      d.id !== item.source_device_id &&
+      d.push_subscription &&
+      (!item.target_device_id || d.id === item.target_device_id),
+  )
   if (targets.length === 0) return json({ sent: 0 })
 
   const payload = JSON.stringify(notificationPayload(item, sourceName))

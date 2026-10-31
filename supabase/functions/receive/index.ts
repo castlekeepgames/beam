@@ -87,10 +87,16 @@ Deno.serve(async (req) => {
         const userId = await claim(db, tokenHash)
         if (!userId) return reply({ error: 'expired' }, 410)
         const itemId = crypto.randomUUID()
-        const { filePath } = objectPaths(userId, itemId, name)
+        const { filePath, thumbPath } = objectPaths(userId, itemId, name)
         const { data, error } = await db.storage.from(BUCKET).createSignedUploadUrl(filePath)
         if (error) throw new Error(error.message)
-        return reply({ itemId, path: data.path, uploadToken: data.token })
+        // Images: a second one-time slot for the small preview the guest's browser makes.
+        let thumb: { thumbPath: string; thumbToken: string } | null = null
+        if (body.thumb === true) {
+          const signed = await db.storage.from(BUCKET).createSignedUploadUrl(thumbPath)
+          if (!signed.error) thumb = { thumbPath: signed.data.path, thumbToken: signed.data.token }
+        }
+        return reply({ itemId, path: data.path, uploadToken: data.token, ...thumb })
       }
 
       // Step 2 of a file: the upload finished; create the item so it appears everywhere.
@@ -107,12 +113,13 @@ Deno.serve(async (req) => {
         if (!code || Date.parse(code.created_at) < Date.now() - FINISH_WINDOW_MS) return reply({ error: 'unknown' }, 404)
 
         // The file must really be there (only a reserved upload token could have put it there).
-        const { filePath } = objectPaths(code.user_id, itemId, name)
+        const { filePath, thumbPath } = objectPaths(code.user_id, itemId, name)
         const folder = `${code.user_id}/${itemId}`
         const { data: listed, error: listError } = await db.storage.from(BUCKET).list(folder)
         if (listError) throw new Error(listError.message)
         const object = listed?.find((o) => `${folder}/${o.name}` === filePath)
         if (!object) return reply({ error: 'Upload not found' }, 409)
+        const hasThumb = listed?.some((o) => `${folder}/${o.name}` === thumbPath) ?? false
 
         const meta = (object.metadata ?? {}) as { size?: number; mimetype?: string }
         const { error } = await db.from('items').upsert(
@@ -124,6 +131,7 @@ Deno.serve(async (req) => {
             file_name: name,
             file_size: meta.size ?? 0,
             mime_type: meta.mimetype || (typeof type === 'string' && type) || null,
+            thumb_path: hasThumb ? thumbPath : null,
             from_guest: true,
           },
           { onConflict: 'id', ignoreDuplicates: true },
