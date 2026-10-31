@@ -153,3 +153,9 @@ One entry per meaningful decision, newest at the bottom.
 - `qrcode`: three dependencies, including a command-line parser.
 - Writing our own QR encoder: not "a few lines".
 - Longer file links: they widen the window in which a photographed code still works.
+### 2026-10-31 — Text QR codes open a web page instead of holding raw text
+**Decision:** A text item's QR code is now a link: `<Beam URL>#t=<text as base64url UTF-8>`. Opening it shows a "Shared from Beam" page with the text and a **Copy text** button. The page needs no sign-in, makes no Supabase calls, and doesn't register the service worker. The 600-character limit now applies to the whole link, which leaves room for roughly 400 characters of plain English text.
+**Why:** You scanned a text code and got "this app was not found on your device". Phone scanners handle raw-text codes inconsistently (some try to hand the text to another app), but every scanner opens web links. Browsers never send the part after `#` to a server, so the text still isn't uploaded anywhere, not even to GitHub.
+**Rejected:**
+- Uploading the text and encoding a link to it: that stores it online and needs a server change.
+- Keeping raw text and adding a warning: it would still fail on the phones that need it most.
