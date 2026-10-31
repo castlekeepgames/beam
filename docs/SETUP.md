@@ -140,7 +140,7 @@ Your phone can only install Beam, get notifications and use the share sheet from
 
 1. Go to **Settings → Pages**.
 2. Under **Build and deployment → Source**, choose **GitHub Actions**.
-3. Go to the **Actions** tab, click **Deploy to GitHub Pages** on the left, then **Run workflow → Run workflow**.
+3. Go to the **Actions** tab, click **Deploy to GitHub Pages** on the left, then **Run workflow → Run workflow**. (The run started by your first push will show as failed at "configure-pages" because Pages wasn't on yet. That's expected; use this new run, not "Re-run".)
 4. Wait for the run to show a green tick (about 1 minute).
 5. Beam is now at `https://YOUR-GITHUB-USERNAME.github.io/beam/`.
 
