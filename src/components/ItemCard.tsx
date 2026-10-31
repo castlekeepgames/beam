@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { extensionLabel, formatBytes } from '../lib/files'
 import { isSafeHttpUrl } from '../lib/links'
+import { describeStorageError, fetchWithProgress, saveBlob, signedUrl, thumbnailUrl } from '../lib/storage'
 import type { Item } from '../lib/types'
+import type { Notify } from './Toast'
 import { buttonClass } from './styles'
 import { Button } from './ui'
+import { ProgressBar } from './UploadList'
 
 const LONG_TEXT_CHARS = 400
 const LONG_TEXT_LINES = 6
@@ -13,14 +17,17 @@ interface Props {
   time: string
   fresh: boolean
   onCopy: (text: string) => void
-  onDelete: (id: string) => void
+  onDelete: (item: Item) => void
+  notify: Notify
 }
 
-export function ItemCard({ item, source, time, fresh, onCopy, onDelete }: Props) {
+export function ItemCard({ item, source, time, fresh, onCopy, onDelete, notify }: Props) {
   const [expanded, setExpanded] = useState(false)
   const content = item.content ?? ''
+  const isFile = item.kind === 'file'
   const isLink = item.kind === 'link' && isSafeHttpUrl(content)
   const isLong = content.length > LONG_TEXT_CHARS || content.split('\n').length > LONG_TEXT_LINES
+  const download = useDownload(item, notify)
 
   return (
     <li
@@ -32,7 +39,9 @@ export function ItemCard({ item, source, time, fresh, onCopy, onDelete }: Props)
         <span className="font-medium text-zinc-700 dark:text-zinc-300">{source}</span> · {time}
       </p>
 
-      {isLink ? (
+      {isFile ? (
+        <FileSummary item={item} />
+      ) : isLink ? (
         <a
           href={content}
           target="_blank"
@@ -41,32 +50,102 @@ export function ItemCard({ item, source, time, fresh, onCopy, onDelete }: Props)
         >
           {content}
         </a>
-      ) : item.kind === 'file' ? (
-        <p className="text-sm text-zinc-500">File: {item.file_name} (file support arrives in Phase 2)</p>
       ) : (
         <p className={`break-words whitespace-pre-wrap ${isLong && !expanded ? 'line-clamp-6' : ''}`}>{content}</p>
       )}
 
+      {download.progress !== null && (
+        <div className="mt-2.5">
+          <ProgressBar value={download.progress} />
+        </div>
+      )}
+
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        {isFile && (
+          <Button className="py-2" onClick={download.start} disabled={download.progress !== null}>
+            {download.progress === null ? 'Download' : `Downloading ${Math.round(download.progress * 100)}%`}
+          </Button>
+        )}
         {isLink && (
           <a href={content} target="_blank" rel="noopener noreferrer" className={buttonClass('primary', 'py-2')}>
             Open
           </a>
         )}
-        {item.kind !== 'file' && (
+        {!isFile && (
           <Button variant={isLink ? 'secondary' : 'primary'} className="py-2" onClick={() => onCopy(content)}>
             Copy
           </Button>
         )}
-        {isLong && !isLink && (
+        {isLong && !isLink && !isFile && (
           <Button variant="ghost" className="py-2" onClick={() => setExpanded((v) => !v)}>
             {expanded ? 'Show less' : 'Show more'}
           </Button>
         )}
-        <Button variant="danger" className="ml-auto py-2" onClick={() => onDelete(item.id)} aria-label="Delete item">
+        <Button variant="danger" className="ml-auto py-2" onClick={() => onDelete(item)} aria-label="Delete item">
           Delete
         </Button>
       </div>
     </li>
   )
+}
+
+function FileSummary({ item }: { item: Item }) {
+  const thumb = useThumbnail(item.thumb_path)
+  const name = item.file_name ?? 'File'
+  return (
+    <div className="flex items-center gap-3">
+      {thumb ? (
+        <img src={thumb} alt="" className="h-16 w-16 shrink-0 rounded-xl bg-zinc-100 object-cover dark:bg-zinc-800" />
+      ) : (
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xs font-bold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300">
+          {extensionLabel(name)}
+        </div>
+      )}
+      <div className="min-w-0">
+        <p className="line-clamp-2 font-medium break-all">{name}</p>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">{formatBytes(item.file_size ?? 0)}</p>
+      </div>
+    </div>
+  )
+}
+
+/** Signed URL for an item's thumbnail, or null while loading / if there is none. */
+function useThumbnail(path: string | null) {
+  const [loaded, setLoaded] = useState<{ path: string; url: string } | null>(null)
+  useEffect(() => {
+    if (!path) return
+    let cancelled = false
+    thumbnailUrl(path)
+      .then((url) => {
+        if (!cancelled) setLoaded({ path, url })
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [path])
+  return loaded && loaded.path === path ? loaded.url : null
+}
+
+/** Download via a short-lived signed URL, with progress. */
+function useDownload(item: Item, notify: Notify) {
+  const [progress, setProgress] = useState<number | null>(null)
+
+  async function start() {
+    if (!item.file_path || progress !== null) return
+    const name = item.file_name ?? 'download'
+    setProgress(0)
+    try {
+      const url = await signedUrl(item.file_path, 60)
+      const blob = await fetchWithProgress(url, item.file_size ?? 0, setProgress)
+      saveBlob(blob, name)
+      notify(`Downloaded ${name}`)
+    } catch (error) {
+      notify(`Couldn't download "${name}". ${describeStorageError(error)}`, 'error')
+    } finally {
+      setProgress(null)
+    }
+  }
+
+  return { progress, start }
 }

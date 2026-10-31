@@ -1,13 +1,20 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { MAX_TEXT_LENGTH } from '../lib/items'
 import { parseSingleUrl } from '../lib/links'
 import type { Notify } from './Toast'
 import { inputClass } from './styles'
 import { Button } from './ui'
 
-export function Composer({ onSend, notify }: { onSend: (text: string) => Promise<void>; notify: Notify }) {
+interface Props {
+  onSend: (text: string) => Promise<void>
+  onFiles: (files: File[]) => void
+  notify: Notify
+}
+
+export function Composer({ onSend, onFiles, notify }: Props) {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
+  const fileInput = useRef<HTMLInputElement>(null)
 
   const isBlank = text.trim() === ''
   const tooLong = text.length > MAX_TEXT_LENGTH
@@ -51,17 +58,33 @@ export function Composer({ onSend, notify }: { onSend: (text: string) => Promise
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-      <div className="flex items-center gap-2">
-        <Button variant="secondary" onClick={pasteFromClipboard}>
-          Paste from clipboard
-        </Button>
-        <span className="flex-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
+      {(tooLong || isLink) && (
+        <p className={`text-xs ${tooLong ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
           {tooLong
             ? `Too long: ${text.length.toLocaleString()} / ${MAX_TEXT_LENGTH.toLocaleString()} characters`
-            : isLink
-              ? 'Will send as a link'
-              : ''}
-        </span>
+            : 'Will send as a link'}
+        </p>
+      )}
+      <div className="flex items-center gap-2">
+        <Button variant="secondary" onClick={pasteFromClipboard} aria-label="Paste from clipboard">
+          <span className="sm:hidden">Paste</span>
+          <span className="hidden sm:inline">Paste from clipboard</span>
+        </Button>
+        <Button variant="secondary" onClick={() => fileInput.current?.click()}>
+          Files…
+        </Button>
+        <input
+          ref={fileInput}
+          type="file"
+          multiple
+          hidden
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? [])
+            e.target.value = '' // allow picking the same file again
+            if (files.length) onFiles(files)
+          }}
+        />
+        <span className="flex-1" />
         <Button onClick={send} disabled={isBlank || tooLong || sending} className="min-w-20">
           {sending ? 'Sending…' : 'Send'}
         </Button>

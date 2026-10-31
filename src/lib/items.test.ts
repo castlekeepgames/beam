@@ -14,6 +14,7 @@ function item(id: string, createdMinutesAgo: number, overrides: Partial<Item> = 
     file_name: null,
     file_size: null,
     mime_type: null,
+    thumb_path: null,
     source_device_id: null,
     created_at: new Date(created).toISOString(),
     expires_at: new Date(created + 24 * 3600_000).toISOString(),

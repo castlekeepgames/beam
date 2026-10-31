@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useFileDrop } from '../hooks/useFileDrop'
 import { useItems, type Connection } from '../hooks/useItems'
+import { useUploads } from '../hooks/useUploads'
 import { cleanDeviceName, MAX_DEVICE_NAME } from '../lib/device'
 import { supabase } from '../lib/supabase'
 import { formatRelative } from '../lib/time'
-import type { Device } from '../lib/types'
+import type { Device, Item } from '../lib/types'
 import { Composer } from './Composer'
 import { ItemCard } from './ItemCard'
+import { UploadList } from './UploadList'
 import { useToast, type Notify } from './Toast'
 import { inputClass } from './styles'
 import { Button, Logo, Page } from './ui'
@@ -38,8 +41,13 @@ interface Props {
 }
 
 export function Home({ userId, device, onRename }: Props) {
-  const { items, deviceNames, loaded, loadError, connection, freshIds, sendText, deleteItem } = useItems(userId, device.id)
+  const { items, deviceNames, loaded, loadError, connection, freshIds, sendText, addItem, deleteItem } = useItems(
+    userId,
+    device.id,
+  )
   const { notify, view: toast } = useToast()
+  const { uploads, addFiles, cancel } = useUploads({ userId, deviceId: device.id, onItem: addItem, notify })
+  const dragging = useFileDrop(addFiles)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const now = useNow(30_000)
 
@@ -56,9 +64,9 @@ export function Home({ userId, device, onRename }: Props) {
   )
 
   const remove = useCallback(
-    async (id: string) => {
+    async (item: Item) => {
       try {
-        await deleteItem(id)
+        await deleteItem(item)
       } catch {
         notify("Couldn't delete. Check your connection and try again.", 'error')
       }
@@ -92,7 +100,9 @@ export function Home({ userId, device, onRename }: Props) {
         <Settings device={device} onRename={onRename} notify={notify} onClose={() => setSettingsOpen(false)} />
       )}
 
-      <Composer onSend={sendText} notify={notify} />
+      <Composer onSend={sendText} onFiles={addFiles} notify={notify} />
+
+      <UploadList uploads={uploads} onCancel={cancel} />
 
       <section className="mt-6 flex-1">
         <h2 className="mb-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
@@ -116,11 +126,20 @@ export function Home({ userId, device, onRename }: Props) {
                 fresh={freshIds.has(item.id)}
                 onCopy={copy}
                 onDelete={remove}
+                notify={notify}
               />
             ))}
           </ul>
         )}
       </section>
+
+      {dragging && (
+        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-indigo-600/15 p-6 backdrop-blur-sm">
+          <div className="rounded-2xl border-2 border-dashed border-indigo-500 bg-white/90 px-8 py-6 text-center text-lg font-medium text-indigo-700 dark:bg-zinc-900/90 dark:text-indigo-300">
+            Drop files to send
+          </div>
+        </div>
+      )}
 
       {toast}
     </Page>

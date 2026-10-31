@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ITEM_LIMIT, mergeItems, removeItem } from '../lib/items'
 import { classifyText } from '../lib/links'
+import { removeObjects } from '../lib/storage'
 import { supabase } from '../lib/supabase'
 import { ITEM_COLUMNS, type Item } from '../lib/types'
 
@@ -138,17 +139,25 @@ export function useItems(userId: string, deviceId: string) {
     [deviceId],
   )
 
+  /** Add a row we created ourselves (e.g. a finished file upload). */
+  const addItem = useCallback((item: Item) => {
+    setItems((cur) => mergeItems(cur, [item]))
+  }, [])
+
   const deleteItem = useCallback(
-    async (id: string) => {
-      setItems((cur) => removeItem(cur, id))
-      const { error } = await supabase.from('items').delete().eq('id', id)
+    async (item: Item) => {
+      setItems((cur) => removeItem(cur, item.id))
+      const { error } = await supabase.from('items').delete().eq('id', item.id)
       if (error) {
         void refetch(true)
         throw new Error(error.message)
       }
+      // Row first so it vanishes everywhere at once; leftovers are swept by the cleanup job.
+      const paths = [item.file_path, item.thumb_path].filter((p): p is string => !!p)
+      void removeObjects(paths).catch(() => {})
     },
     [refetch],
   )
 
-  return { items, deviceNames, loaded, loadError, connection, freshIds, sendText, deleteItem }
+  return { items, deviceNames, loaded, loadError, connection, freshIds, sendText, addItem, deleteItem }
 }

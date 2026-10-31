@@ -8,13 +8,14 @@ export interface Item {
   file_name: string | null
   file_size: number | null
   mime_type: string | null
+  thumb_path: string | null
   source_device_id: string | null
   created_at: string
   expires_at: string
 }
 
 export const ITEM_COLUMNS =
-  'id, kind, content, file_path, file_name, file_size, mime_type, source_device_id, created_at, expires_at'
+  'id, kind, content, file_path, file_name, file_size, mime_type, thumb_path, source_device_id, created_at, expires_at'
 
 export interface Device {
   id: string
