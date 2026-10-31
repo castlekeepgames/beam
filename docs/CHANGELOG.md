@@ -34,3 +34,10 @@ Oldest first.
 - Added a **Photos** button on touch screens that opens Android's Photos picker.
 ## 2026-10-31 — Phase 2: files (complete)
 - Migration applied, deployed, and the device checklist approved on Android and Windows.
+
+## 2026-10-31 — Phases 2b–5: cleanup, notifications, share sheet, polish (built; awaiting deploy and device testing)
+- **2b Cleanup:** an hourly pg_cron job deletes expired rows, then the `cleanup` Edge Function deletes files with no row. The Supabase CLI was added for migrations and deploys.
+- **3 Notifications:** Enable/Turn off in the device menu, the `send-push` Edge Function triggered on every new item, no notification to the sending device or while Beam is in front, tapping opens the item, and expired subscriptions are cleared.
+- **4 Share sheet:** Beam appears in Android's share menu for text, links and files, sends immediately, and confirms with a toast.
+- **5 Polish:** a Keep toggle, offline banner, Try again on errors, a richer empty state, Ctrl+Enter to send, and compact card buttons.
+- 57 unit tests (added share text, notification wording, Keep, VAPID key); Edge Functions type-checked with Deno.

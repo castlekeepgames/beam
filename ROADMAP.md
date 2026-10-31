@@ -39,26 +39,31 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] **You:** run the Phase 2 migration, deploy, and run the Phase 2 checklist (approved 2026-10-31)
 
 ## Phase 2b — Cleanup (moved up from Phase 5 so the 1 GB free storage never fills)
-- [ ] `cleanup` Edge Function deletes expired items + files (and orphaned uploads), scheduled hourly
-- [ ] Supabase CLI set up (needed for Edge Functions); mark earlier migrations applied
+- [x] Hourly pg_cron job deletes expired rows, then calls the `cleanup` Edge Function to delete files with no row (expired, deleted, abandoned uploads)
+- [x] Supabase CLI added as a dev dependency (`npx supabase`), project config in `supabase/config.toml`
+- [ ] **You:** CLI sign-in + link, mark earlier migrations applied, push new migrations (`docs/SETUP.md` section 8)
+- [ ] Deploy `cleanup` function (I do this once you've linked)
 
 ## Phase 3 — Notifications
-- [ ] VAPID keys (setup steps in SETUP.md)
-- [ ] "Enable notifications" button, store subscription on device
-- [ ] `send-push` Edge Function + database webhook on `items` insert
-- [ ] Skip the source device; handle expired subscriptions
-- [ ] Notification click opens app on that item
+- [x] VAPID keys generated; public key in `src/lib/push.ts`, private key goes to the `VAPID_KEYS` function secret
+- [x] "Enable notifications" in the device menu; subscription stored on the device row (and re-synced on start)
+- [x] `send-push` Edge Function + `items` insert trigger (pg_net)
+- [x] Skip the source device; clear expired subscriptions (404/410)
+- [x] Notification click opens the app on that item (scroll + highlight); no notification when Beam is in front
+- [ ] Deploy `send-push` + set `VAPID_KEYS` secret (I do this once you've linked)
+- [ ] **You:** enable notifications on each device and run the Phase 3 checklist
 
 ## Phase 4 — Android share sheet
-- [ ] `share_target` in manifest (POST, multipart, text + url + files)
-- [ ] Service worker handles share POST and hands off to the app
-- [ ] Share flow sends immediately with a confirmation toast
-- [ ] Test sharing from Chrome, Photos, and a messaging app
+- [x] `share_target` in manifest (POST, multipart, text + url + files)
+- [x] Service worker handles share POST, stashes it in Cache Storage and hands off to the app
+- [x] Share flow sends immediately with a confirmation toast
+- [ ] **You:** test sharing from Chrome, Photos, and a messaging app
 
 ## Phase 5 — Cleanup and polish
-- [ ] "Keep" toggle to exempt an item from expiry
-- [ ] Empty states, error states, offline banner
-- [ ] Keyboard shortcut on desktop: Ctrl+Enter to send
+- [x] "Keep" toggle to exempt an item from expiry (un-keeping gives it a fresh 24 hours)
+- [x] Empty states, error states (with Try again), offline banner
+- [x] Keyboard shortcut on desktop: Ctrl+Enter to send
+- [ ] **You:** run the Phase 5 checklist
 
 ## Later (not started)
 - [ ] Windows tray app (Tauri) with global hotkey to send clipboard and auto-copy incoming text

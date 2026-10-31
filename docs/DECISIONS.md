@@ -115,3 +115,28 @@ One entry per meaningful decision, newest at the bottom.
 **Decision:** Next to **Files…**, touch screens get a **Photos** button whose file input only accepts `image/*,video/*`. Android then opens its Photos picker (recent photos and albums) instead of the Camera / Video / Files chooser. The button is hidden when the main pointer is a mouse (`pointer: coarse`), so Windows only shows **Files…**.
 **Why:** You asked for a direct way into your photos. An input that accepts any file type can't open Android's Photos picker, so we need two buttons.
 **Rejected:** Limiting **Files…** to images, which would stop you sending documents from the phone.
+### 2026-10-31 — Cleanup, notifications, share sheet and Keep (Phases 2b–5)
+**Decision:**
+- **Supabase CLI** is a dev dependency (`npx supabase`). You link it once. After that, migrations go out with `db push` and functions with `functions deploy`, so there's no more pasting into the dashboard. The Phase 1 and 2 migrations were applied by hand, so they're marked applied with `migration repair`.
+- **Cleanup is split between SQL and a function.** pg_cron runs `beam-cleanup` at 7 minutes past every hour. It deletes expired rows that aren't kept (Realtime removes them from open devices), then calls the `cleanup` Edge Function. That function lists files with no matching row via `beam_orphaned_files()` (service role only) and deletes them through the Storage API. Supabase doesn't allow deleting files with SQL. Requiring files to be at least an hour old protects uploads that are still in progress.
+- **Push is triggered by the database:** an `after insert` trigger on `items` calls `send-push` through pg_net with just `{ item_id }`.
+- **The functions run without JWT checks** (`verify_jwt = false`). Supabase's new publishable and secret keys aren't JWTs, and we don't want to store a secret inside the database just to authenticate pg_net calls. So both functions are designed to be harmless if anyone calls them:
+  - `cleanup` takes no input and only deletes files that have no row.
+  - `send-push` takes only an item id and reads everything else with the service role. It claims the item with `update … set pushed_at = now() where pushed_at is null and created_at > now() - 5 min`, so each item is pushed at most once, and only just after it's created.
+  - The worst case is someone using up our free function calls, which is acceptable for a personal app.
+- **Web Push uses `jsr:@negrel/webpush`.** It's built on standard browser crypto (WebCrypto) and runs in Supabase's Deno runtime. The VAPID keys were generated locally. The public key is committed in `src/lib/push.ts`, and the private JWK pair is stored only in the `VAPID_KEYS` function secret. The VAPID contact is the site URL, so no email address is sent to push services.
+- **Notifications:**
+  - They're skipped when Beam is open and in front, because the item already appears there.
+  - The tag is the item id, so one notification shows per item.
+  - Tapping focuses an open Beam window, or opens Beam at `?item=<id>`, which scrolls to the item and highlights it.
+  - A 404 or 410 from the push service clears that device's subscription.
+  - On start, an existing subscription is re-saved, and replaced if the VAPID key has changed.
+- **Share target:** the service worker catches `POST <scope>share-target`, stores the text and files in a `beam-share` Cache Storage entry, then redirects to `?share=1`. The app sends them immediately. A lone URL becomes a link (Chrome puts the page URL in `text`). Message text plus a URL are sent together. The title is used only when nothing else was shared.
+- **Keep:** a `kept` boolean. Clients may update only `kept` and `expires_at` (via a column-level grant and an update policy). Un-keeping gives the item a fresh 24 hours, so it doesn't vanish the moment you un-keep it. Realtime `UPDATE` events sync it across devices.
+- **Polish:** an offline banner (driven by the browser's online/offline state), a "Try again" button on load errors, a fuller empty state with tips, Ctrl+Enter to send, a size option on buttons, and "Show more" moved under the text so action buttons fit on one row on a phone.
+
+**Rejected:**
+- Doing cleanup from the app when it opens. It wouldn't run if no device opened Beam.
+- `npm:web-push`. It relies on Node crypto, which works less reliably in Deno than WebCrypto.
+- Database webhooks configured in the dashboard. They'd be untracked dashboard settings.
+- Storing a shared secret in Supabase Vault. It's an extra manual step, and the idempotent design above makes it unnecessary.

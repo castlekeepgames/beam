@@ -93,3 +93,52 @@ Do these after SETUP.md section 7 (migration + deploy), with Beam open on both d
 
 ### D. Problems to report
 - [ ] Note any upload that fails and the exact message shown.
+---
+
+## Phase 2b — Cleanup
+
+Hard to watch in real time. Check it over a day.
+- [ ] In Supabase, **Integrations → Cron** (or **Database → Cron**) shows a job **beam-cleanup** scheduled `7 * * * *`, and its recent runs succeed.
+- [ ] **Edge Functions → cleanup → Logs** show `cleanup: removed N orphaned file(s)` each hour.
+- [ ] Items older than 24 hours disappear from both devices without you doing anything (even with Beam closed overnight).
+- [ ] In **Storage → files**, folders for expired items are gone after the next hourly run.
+
+---
+
+## Phase 3 — Notifications
+
+Set up per SETUP.md section 9 first.
+- [ ] **Android:** device menu → Notifications → **Enable** → Allow. It now says "On".
+- [ ] **Windows:** the same. The Windows tip about background running appears.
+- [ ] **Phone gets a notification:** close Beam on the phone (swipe it away), send text from the PC. A notification "From <PC name>" shows the text.
+- [ ] **PC gets a notification:** minimise or close the Beam window, send from the phone. A Windows notification appears.
+- [ ] **Tap the notification.** Beam opens and scrolls to that item, with a brief highlight.
+- [ ] **No self-notifications:** the device you send from never gets a notification for its own item.
+- [ ] **No notification while open:** with Beam open and in front on the receiving device, nothing pops up (the item just appears).
+- [ ] **Files and links:** the notification says "File: name" or shows the link.
+- [ ] **Turn off:** device menu → Notifications → **Turn off**. Sends from the other device no longer notify this one.
+
+---
+
+## Phase 4 — Android share sheet
+
+Set up per SETUP.md section 10 first. Only works in the installed app on Android.
+- [ ] **Chrome:** open any web page, tap **Share → Beam**. Beam opens, shows "Shared to Beam ✓", and the PC gets the page as a link with **Open**.
+- [ ] **Photos:** share one photo, then three photos at once. Each uploads with progress and appears on the PC with a thumbnail.
+- [ ] **Messaging app** (WhatsApp, Messages…): share a message's text. It arrives on the PC as text.
+- [ ] **Text plus link** (e.g. sharing from an app that adds a message): both arrive in one item.
+- [ ] **Over 50 MB** (e.g. a long video): you get the "Beam's limit is 50 MB" message and nothing uploads.
+- [ ] **Not signed in:** sign out, share something, then sign in. It's sent after you sign in.
+
+---
+
+## Phase 5 — Polish
+
+- [ ] **Keep:** tap **Keep** on an item. A "KEPT" badge appears on both devices, and the button says **Unkeep**.
+- [ ] **Keep survives expiry:** a kept item is still there after 24 hours (check the next day).
+- [ ] **Unkeep:** the item stays for another 24 hours, then disappears.
+- [ ] **Offline banner:** turn on airplane mode. An amber "You're offline" banner appears, and goes away when you're back online.
+- [ ] **Load error:** with airplane mode on, reopen Beam. An error with **Try again** appears; turn airplane mode off and tap it, and the list loads.
+- [ ] **Empty state:** with no items, the empty box shows a tip (share sheet on Android; drag and drop / Ctrl+Enter on Windows).
+- [ ] **Ctrl+Enter (Windows):** type text and press Ctrl+Enter to send. Plain Enter makes a new line.
+- [ ] **Phone layout:** on every card, the buttons (Copy / Open / Download, Keep, Delete) fit on one row. Long text shows **Show more** under it.

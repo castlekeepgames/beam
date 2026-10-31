@@ -30,7 +30,9 @@ Non-goals for now: multiple users/sharing with others, iOS, a native Windows tra
   - Postgres with Row Level Security on every table.
   - Realtime: subscribe to inserts on `items` for the current user.
   - Storage: private bucket `files`, accessed via signed URLs only.
-  - Edge Functions (Deno): `send-push` (web push on new item) and `cleanup` (scheduled deletion of expired items + their files).
+  - Edge Functions (Deno): `send-push` (web push on new item) and `cleanup` (deletes stored files whose item row is gone). Deployed with `verify_jwt = false` (see `supabase/config.toml`), so they must stay safe to call by anyone: take no secrets or content from the caller, read everything from the database, and be idempotent.
+  - Supabase CLI is a dev dependency: `npx supabase db push` applies migrations, `npx supabase functions deploy <name>` deploys a function. `npm run functions:check` type-checks functions with Deno.
+  - Scheduling: pg_cron (`beam-cleanup` job, hourly) deletes expired, non-kept rows and calls `cleanup`; an `items` insert trigger calls `send-push` through pg_net.
 - **Push:** standard Web Push with VAPID keys, sent from the `send-push` Edge Function.
 - **Hosting:** GitHub Pages (public repo), deployed by a GitHub Actions workflow on every push to `main`. The site lives under a sub-path (`https://<user>.github.io/beam/`), so never hard-code `/` for asset or app URLs — use `import.meta.env.BASE_URL` or relative paths. HTTPS is required for PWA install, service workers, push and share target.
 - **Third parties:** keep it to Supabase and GitHub. Ask before adding any other service.
@@ -50,6 +52,8 @@ Prefer well-maintained libraries over hand-rolled code, but don't add a dependen
 - `created_at` timestamptz default now(), `expires_at` timestamptz default now() + interval '24 hours'
 
 - `thumb_path` text null (small JPEG thumbnail for images, generated on the sending device)
+- `kept` boolean default false (exempt from expiry; owners may update only `kept` and `expires_at`)
+- `pushed_at` timestamptz null (set by `send-push` when it claims an item; never by clients)
 
 RLS: users can select/insert/delete only rows where `user_id = auth.uid()`. Storage policies restrict `files/<user_id>/...` to that user.
 

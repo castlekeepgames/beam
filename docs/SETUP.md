@@ -178,3 +178,47 @@ Run this once, after pulling the Phase 2 code.
 6. On each device, close Beam completely and reopen it, so the installed app picks up the new version. If the **Files…** button doesn't appear, close and reopen it once more.
 
 > File limits: 50 MB per file, and 1 GB of storage in total on the Free plan. Items expire after 24 hours, and the cleanup job (Phase 2b) deletes their files.
+---
+
+## 8. Connect the Supabase command-line tool (one-time, for Phases 2b–5)
+
+This lets Claude (or you) apply database changes and deploy server code from PowerShell, with no more pasting into the dashboard.
+
+1. Sign in. This opens your browser; approve access, then come back to PowerShell. It should say you're logged in.
+   ```powershell
+   npx supabase login
+   ```
+2. Link this project to your Supabase project. When it asks for the **database password**, paste the one you saved when you created the project. (Forgot it? In Supabase go to **Project Settings → Database → Reset database password**, set a new one, then use that.)
+   ```powershell
+   npx supabase link --project-ref jxfrkpympmhwkdtpndkq
+   ```
+3. Tell Supabase that the first two migrations are already applied (you ran them in the SQL Editor). Enter the database password again if asked:
+   ```powershell
+   npx supabase migration repair --status applied 20261030120000 20261031090000
+   ```
+4. Apply the new migrations (cleanup, push, keep). Type `Y` when it lists them:
+   ```powershell
+   npx supabase db push
+   ```
+5. Then tell Claude. Claude deploys the two functions, stores the push key as a secret, and pushes the app.
+
+---
+
+## 9. Turn on notifications (each device)
+
+1. Open Beam, tap your device name (top right), then **Enable** next to Notifications.
+2. Choose **Allow** when the browser asks.
+3. **Windows only:** web notifications only arrive while your browser is running. To keep it running in the background after you close its windows:
+   - **Edge:** Settings → **System and performance** → turn on **Continue running background extensions and apps when Microsoft Edge is closed**.
+   - **Chrome:** Settings → **System** → turn on **Continue running background apps when Google Chrome is closed**.
+   Also check **Windows Settings → System → Notifications** and make sure notifications are on for Edge or Chrome.
+4. **Android:** if notifications don't appear, check **Settings → Apps → Beam → Notifications** (or Chrome's notification settings) and allow them.
+
+---
+
+## 10. Get Beam into Android's share sheet
+
+1. After the update is deployed, open Beam on the phone once, then close it.
+2. Android picks up the new share option when Chrome refreshes the installed app. This can take a little while, sometimes up to a day.
+3. To get it straight away: long-press the Beam icon → **App info** → **Uninstall**, then reinstall from Chrome (`https://castlekeepgames.github.io/beam/` → **⋮ → Install app**). You may need to sign in and name the phone again; that's fine.
+4. Share something from any app (**Share → Beam**). Beam opens briefly, sends it, and shows "Shared to Beam ✓".
