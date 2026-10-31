@@ -23,8 +23,8 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] GitHub Pages deploy workflow (`.github/workflows/deploy.yml`)
 - [x] TESTING.md checklist for Phase 1
 - [x] **You:** deploy to GitHub Pages (live at https://castlekeepgames.github.io/beam/, 2026-10-31)
-- [ ] **You:** install PWA on Android and Windows (`docs/SETUP.md` section 6d)
-- [ ] **You:** run the Phase 1 checklist in `docs/TESTING.md` on both devices
+- [x] **You:** install PWA on Android and Windows (`docs/SETUP.md` section 6d)
+- [x] **You:** run the Phase 1 checklist in `docs/TESTING.md` on both devices (approved 2026-10-31)
 
 ## Phase 2 — Files
 - [ ] Private `files` storage bucket + policies

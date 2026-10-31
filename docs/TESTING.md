@@ -16,6 +16,8 @@ Windows PC (local):
 
 ## Phase 1 — Text and links
 
+**Status:** approved on Android and Windows, 2026-10-31.
+
 ### A. Quick local check on the PC (before deploying)
 Run `npm run dev` and open `http://localhost:5173` in Edge or Chrome.
 - [ ] Wrong password: shows "Wrong email or password."
