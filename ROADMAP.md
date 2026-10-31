@@ -94,7 +94,7 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Thumbnails for guest photos
 - [x] Send to one device only ("To:" picker; only that device sees it and is notified)
 - [x] Search box over the list (text, links, file names, device names)
-- [ ] **You:** run the Phase 9 checklist
+- [x] **You:** run the Phase 9 checklist (approved 2026-10-31)
 
 ## Later (not started)
 - [ ] Longer history (search currently covers the last 24 hours plus kept items)

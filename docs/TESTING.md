@@ -212,6 +212,8 @@ Close and reopen Beam on each device first (on the PC, Ctrl+Shift+R in the Beam 
 
 ## Phase 9 — Everyday upgrades
 
+**Status:** approved, 2026-10-31.
+
 Close and reopen Beam on each device first.
 
 **Photo viewer**
