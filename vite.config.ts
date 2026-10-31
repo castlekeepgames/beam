@@ -31,6 +31,18 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#0b0b12',
         theme_color: '#4f46e5',
+        // Android share sheet (installed app only). Handled in src/sw.ts.
+        share_target: {
+          action: `${base}share-target`,
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url',
+            files: [{ name: 'files', accept: ['*/*'] }],
+          },
+        },
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -48,6 +60,6 @@ export default defineConfig({
     }),
   ],
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'supabase/functions/**/*.test.ts'],
   },
 })

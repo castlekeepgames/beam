@@ -6,8 +6,16 @@ export const ITEM_LIMIT = 100
 /** Longest text the database accepts (see the items_payload check). */
 export const MAX_TEXT_LENGTH = 100_000
 
+/** How long an item lives (also the database default). */
+export const ITEM_LIFETIME_MS = 24 * 3600_000
+
 export function isExpired(item: Item, now = Date.now()): boolean {
-  return Date.parse(item.expires_at) <= now
+  return !item.kept && Date.parse(item.expires_at) <= now
+}
+
+/** The change to send when toggling Keep. Un-keeping gives the item a fresh 24 hours. */
+export function keepChange(item: Item, now = Date.now()): Pick<Item, 'kept'> & Partial<Pick<Item, 'expires_at'>> {
+  return item.kept ? { kept: false, expires_at: new Date(now + ITEM_LIFETIME_MS).toISOString() } : { kept: true }
 }
 
 /**

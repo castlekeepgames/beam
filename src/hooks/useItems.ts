@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ITEM_LIMIT, mergeItems, removeItem } from '../lib/items'
+import { ITEM_LIMIT, keepChange, mergeItems, removeItem } from '../lib/items'
 import { classifyText } from '../lib/links'
 import { removeObjects } from '../lib/storage'
 import { supabase } from '../lib/supabase'
@@ -40,7 +40,7 @@ export function useItems(userId: string, deviceId: string) {
       supabase
         .from('items')
         .select(ITEM_COLUMNS)
-        .gt('expires_at', new Date().toISOString())
+        .or(`kept.eq.true,expires_at.gt.${new Date().toISOString()}`)
         .order('created_at', { ascending: false })
         .limit(ITEM_LIMIT),
       supabase.from('devices').select('id, name'),
@@ -86,6 +86,15 @@ export function useItems(userId: string, deviceId: string) {
           setItems((cur) => mergeItems(cur, [item]))
           if (item.source_device_id !== deviceId) markFresh(item.id)
           if (item.source_device_id && !(item.source_device_id in deviceNamesRef.current)) void refetch(true)
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'items', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          // Keep toggled on another device (or pushed_at set by the server).
+          const item = payload.new as Item
+          setItems((cur) => (cur.some((i) => i.id === item.id) || item.kept ? mergeItems(cur, [item]) : cur))
         },
       )
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'items' }, (payload) => {
@@ -139,6 +148,20 @@ export function useItems(userId: string, deviceId: string) {
     [deviceId],
   )
 
+  const toggleKeep = useCallback(
+    async (item: Item) => {
+      const change = keepChange(item)
+      setItems((cur) => mergeItems(cur, [{ ...item, ...change }]))
+      const { data, error } = await supabase.from('items').update(change).eq('id', item.id).select(ITEM_COLUMNS).single()
+      if (error) {
+        void refetch(true)
+        throw new Error(error.message)
+      }
+      setItems((cur) => mergeItems(cur, [data]))
+    },
+    [refetch],
+  )
+
   /** Add a row we created ourselves (e.g. a finished file upload). */
   const addItem = useCallback((item: Item) => {
     setItems((cur) => mergeItems(cur, [item]))
@@ -159,5 +182,20 @@ export function useItems(userId: string, deviceId: string) {
     [refetch],
   )
 
-  return { items, deviceNames, loaded, loadError, connection, freshIds, sendText, addItem, deleteItem }
+  const retry = useCallback(() => void refetch(true), [refetch])
+
+  return {
+    items,
+    deviceNames,
+    loaded,
+    loadError,
+    connection,
+    freshIds,
+    markFresh,
+    retry,
+    sendText,
+    addItem,
+    deleteItem,
+    toggleKeep,
+  }
 }

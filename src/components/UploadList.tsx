@@ -34,7 +34,7 @@ export function UploadList({ uploads, onCancel }: { uploads: Upload[]; onCancel:
                   {u.status === 'uploading' && ` ${Math.round(u.progress * 100)}%`}
                 </p>
               </div>
-              <Button variant="ghost" className="py-1.5" onClick={() => onCancel(u.key)}>
+              <Button variant="ghost" size="sm" onClick={() => onCancel(u.key)}>
                 Cancel
               </Button>
             </div>

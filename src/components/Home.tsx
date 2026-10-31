@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useFileDrop } from '../hooks/useFileDrop'
+import { useOpenItem, useShareIntake } from '../hooks/useIntents'
 import { useItems, type Connection } from '../hooks/useItems'
+import { useOnline } from '../hooks/useOnline'
 import { useUploads } from '../hooks/useUploads'
-import { cleanDeviceName, MAX_DEVICE_NAME } from '../lib/device'
-import { supabase } from '../lib/supabase'
+import { syncPush } from '../lib/push'
 import { formatRelative } from '../lib/time'
 import type { Device, Item } from '../lib/types'
 import { Composer } from './Composer'
 import { ItemCard } from './ItemCard'
+import { Settings } from './Settings'
+import { useToast } from './Toast'
 import { UploadList } from './UploadList'
-import { useToast, type Notify } from './Toast'
-import { inputClass } from './styles'
 import { Button, Logo, Page } from './ui'
 
 const CONNECTION_LABEL: Record<Connection, string> = {
@@ -41,15 +42,22 @@ interface Props {
 }
 
 export function Home({ userId, device, onRename }: Props) {
-  const { items, deviceNames, loaded, loadError, connection, freshIds, sendText, addItem, deleteItem } = useItems(
-    userId,
-    device.id,
-  )
+  const { items, deviceNames, loaded, loadError, connection, freshIds, markFresh, retry, sendText, addItem, deleteItem, toggleKeep } =
+    useItems(userId, device.id)
   const { notify, view: toast } = useToast()
   const { uploads, addFiles, cancel } = useUploads({ userId, deviceId: device.id, onItem: addItem, notify })
   const dragging = useFileDrop(addFiles)
+  const online = useOnline()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const now = useNow(30_000)
+
+  useShareIntake(sendText, addFiles, notify)
+  useOpenItem(items, markFresh)
+
+  // Keep this device's push subscription current if notifications are already on.
+  useEffect(() => {
+    syncPush(device.id).catch(() => {})
+  }, [device.id])
 
   const copy = useCallback(
     async (text: string) => {
@@ -74,6 +82,18 @@ export function Home({ userId, device, onRename }: Props) {
     [deleteItem, notify],
   )
 
+  const keep = useCallback(
+    async (item: Item) => {
+      try {
+        await toggleKeep(item)
+        notify(item.kept ? 'No longer kept: expires in 24 hours' : 'Kept: won’t expire')
+      } catch {
+        notify("Couldn't change Keep. Check your connection and try again.", 'error')
+      }
+    },
+    [toggleKeep, notify],
+  )
+
   const sourceLabel = (sourceId: string | null) => {
     if (sourceId === device.id) return 'This device'
     return (sourceId && deviceNames[sourceId]) || 'Unknown device'
@@ -96,6 +116,15 @@ export function Home({ userId, device, onRename }: Props) {
         </Button>
       </header>
 
+      {!online && (
+        <div
+          role="status"
+          className="mb-4 rounded-xl bg-amber-100 px-3.5 py-2.5 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+        >
+          You're offline. Sending won't work until you reconnect; anything sent meanwhile will appear then.
+        </div>
+      )}
+
       {settingsOpen && (
         <Settings device={device} onRename={onRename} notify={notify} onClose={() => setSettingsOpen(false)} />
       )}
@@ -105,16 +134,24 @@ export function Home({ userId, device, onRename }: Props) {
       <UploadList uploads={uploads} onCancel={cancel} />
 
       <section className="mt-6 flex-1">
-        <h2 className="mb-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-          Recent · last 24 hours
-        </h2>
-        {loadError && <p className="mb-2 text-sm text-red-600 dark:text-red-400">{loadError}</p>}
+        <div className="mb-2 flex items-baseline justify-between gap-2">
+          <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Recent</h2>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500">Items expire after 24 hours unless kept</p>
+        </div>
+
+        {loadError && (
+          <div className="mb-3 flex items-center gap-3 rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700 dark:bg-red-950/60 dark:text-red-300">
+            <span className="flex-1">{loadError}</span>
+            <Button variant="secondary" size="sm" onClick={retry}>
+              Try again
+            </Button>
+          </div>
+        )}
+
         {!loaded && !loadError ? (
           <p className="text-sm text-zinc-500">Loading…</p>
-        ) : items.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            Nothing here yet. Send something from this or another device.
-          </p>
+        ) : loaded && items.length === 0 ? (
+          <EmptyState />
         ) : (
           <ul className="flex flex-col gap-2.5">
             {items.map((item) => (
@@ -126,6 +163,7 @@ export function Home({ userId, device, onRename }: Props) {
                 fresh={freshIds.has(item.id)}
                 onCopy={copy}
                 onDelete={remove}
+                onToggleKeep={keep}
                 notify={notify}
               />
             ))}
@@ -146,65 +184,18 @@ export function Home({ userId, device, onRename }: Props) {
   )
 }
 
-function Settings({
-  device,
-  onRename,
-  notify,
-  onClose,
-}: {
-  device: Device
-  onRename: (name: string) => Promise<void>
-  notify: Notify
-  onClose: () => void
-}) {
-  const [name, setName] = useState(device.name)
-  const [busy, setBusy] = useState(false)
-
-  async function save(event: FormEvent) {
-    event.preventDefault()
-    const clean = cleanDeviceName(name)
-    if (!clean) return notify('Give this device a name.', 'error')
-    setBusy(true)
-    try {
-      await onRename(clean)
-      notify('Device renamed')
-      onClose()
-    } catch {
-      notify("Couldn't rename. Check your connection and try again.", 'error')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function signOut() {
-    // 'local' signs out only this device; your other devices stay signed in.
-    await supabase.auth.signOut({ scope: 'local' })
-  }
-
+function EmptyState() {
   return (
-    <section className="mb-4 rounded-2xl bg-white p-3.5 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-      <form onSubmit={save} className="flex flex-col gap-2">
-        <label htmlFor="device-name" className="text-sm font-medium">
-          This device's name
-        </label>
-        <div className="flex gap-2">
-          <input
-            id="device-name"
-            className={inputClass}
-            maxLength={MAX_DEVICE_NAME}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <Button type="submit" disabled={busy}>
-            Save
-          </Button>
-        </div>
-      </form>
-      <div className="mt-3 flex justify-end border-t border-zinc-200 pt-3 dark:border-zinc-800">
-        <Button variant="danger" onClick={signOut}>
-          Sign out of this device
-        </Button>
-      </div>
-    </section>
+    <div className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+      <p className="font-medium text-zinc-700 dark:text-zinc-300">Nothing here yet</p>
+      <p className="mt-1">Paste text or a link, or pick files above. They'll show up on your other devices instantly.</p>
+      <p className="mt-3 text-xs pointer-fine:hidden">
+        Tip: in any Android app, tap <strong>Share</strong> and choose <strong>Beam</strong>.
+      </p>
+      <p className="mt-3 hidden text-xs pointer-fine:block">
+        Tip: drag files onto this window, or press <kbd className="font-sans font-semibold">Ctrl+Enter</kbd> to send
+        text.
+      </p>
+    </div>
   )
 }

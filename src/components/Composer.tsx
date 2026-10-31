@@ -56,6 +56,13 @@ export function Composer({ onSend, onFiles, notify }: Props) {
         placeholder="Paste text or a link…"
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          // Ctrl+Enter (Cmd+Enter on Mac) sends; plain Enter is a new line.
+          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault()
+            void send()
+          }
+        }}
       />
       {(tooLong || isLink) && (
         <p className={`text-xs ${tooLong ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
@@ -74,7 +81,10 @@ export function Composer({ onSend, onFiles, notify }: Props) {
           <PickButton label="Photos" accept="image/*,video/*" onFiles={onFiles} />
         </span>
         <PickButton label="Files…" onFiles={onFiles} />
-        <span className="flex-1" />
+        <span className="hidden flex-1 text-right text-xs text-zinc-400 pointer-fine:inline dark:text-zinc-500">
+          Ctrl+Enter
+        </span>
+        <span className="flex-1 pointer-fine:hidden" />
         <Button onClick={send} disabled={isBlank || tooLong || sending} className="min-w-20">
           {sending ? 'Sending…' : 'Send'}
         </Button>

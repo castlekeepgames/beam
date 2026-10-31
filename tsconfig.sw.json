@@ -19,5 +19,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/sw.ts"]
+  "include": ["src/sw.ts", "src/shared"]
 }

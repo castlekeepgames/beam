@@ -12,10 +12,12 @@ export interface Item {
   source_device_id: string | null
   created_at: string
   expires_at: string
+  /** Exempt from the 24-hour expiry. */
+  kept: boolean
 }
 
 export const ITEM_COLUMNS =
-  'id, kind, content, file_path, file_name, file_size, mime_type, thumb_path, source_device_id, created_at, expires_at'
+  'id, kind, content, file_path, file_name, file_size, mime_type, thumb_path, source_device_id, created_at, expires_at, kept'
 
 export interface Device {
   id: string

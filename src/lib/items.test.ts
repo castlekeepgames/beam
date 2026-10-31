@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ITEM_LIMIT, isExpired, mergeItems, removeItem } from './items'
+import { ITEM_LIFETIME_MS, ITEM_LIMIT, isExpired, keepChange, mergeItems, removeItem } from './items'
 import type { Item } from './types'
 
 const NOW = Date.parse('2026-10-30T12:00:00Z')
@@ -18,6 +18,7 @@ function item(id: string, createdMinutesAgo: number, overrides: Partial<Item> = 
     source_device_id: null,
     created_at: new Date(created).toISOString(),
     expires_at: new Date(created + 24 * 3600_000).toISOString(),
+    kept: false,
     ...overrides,
   }
 }
@@ -55,6 +56,27 @@ describe('mergeItems', () => {
     const merged = mergeItems([], many, NOW)
     expect(merged).toHaveLength(ITEM_LIMIT)
     expect(merged[0].id).toBe('i0')
+  })
+})
+
+describe('Keep', () => {
+  const past = new Date(NOW - 1000).toISOString()
+
+  it('kept items never expire, even past expires_at', () => {
+    const kept = item('k', 60 * 30, { expires_at: past, kept: true })
+    expect(isExpired(kept, NOW)).toBe(false)
+    expect(mergeItems([], [kept], NOW).map((i) => i.id)).toEqual(['k'])
+  })
+
+  it('keeping only sets the flag', () => {
+    expect(keepChange(item('a', 1), NOW)).toEqual({ kept: true })
+  })
+
+  it('un-keeping gives the item a fresh 24 hours', () => {
+    expect(keepChange(item('a', 60 * 30, { kept: true, expires_at: past }), NOW)).toEqual({
+      kept: false,
+      expires_at: new Date(NOW + ITEM_LIFETIME_MS).toISOString(),
+    })
   })
 })
 

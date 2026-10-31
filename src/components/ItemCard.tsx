@@ -18,10 +18,11 @@ interface Props {
   fresh: boolean
   onCopy: (text: string) => void
   onDelete: (item: Item) => void
+  onToggleKeep: (item: Item) => void
   notify: Notify
 }
 
-export function ItemCard({ item, source, time, fresh, onCopy, onDelete, notify }: Props) {
+export function ItemCard({ item, source, time, fresh, onCopy, onDelete, onToggleKeep, notify }: Props) {
   const [expanded, setExpanded] = useState(false)
   const content = item.content ?? ''
   const isFile = item.kind === 'file'
@@ -31,12 +32,20 @@ export function ItemCard({ item, source, time, fresh, onCopy, onDelete, notify }
 
   return (
     <li
-      className={`rounded-2xl bg-white p-3.5 ring-1 transition-shadow duration-700 dark:bg-zinc-900 ${
+      id={`item-${item.id}`}
+      className={`scroll-mt-4 rounded-2xl bg-white p-3.5 ring-1 transition-shadow duration-700 dark:bg-zinc-900 ${
         fresh ? 'ring-2 ring-indigo-500 shadow-md shadow-indigo-500/20' : 'ring-zinc-200 dark:ring-zinc-800'
       }`}
     >
-      <p className="mb-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-        <span className="font-medium text-zinc-700 dark:text-zinc-300">{source}</span> · {time}
+      <p className="mb-1.5 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+        <span>
+          <span className="font-medium text-zinc-700 dark:text-zinc-300">{source}</span> · {time}
+        </span>
+        {item.kept && (
+          <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-indigo-700 uppercase dark:bg-indigo-950 dark:text-indigo-300">
+            Kept
+          </span>
+        )}
       </p>
 
       {isFile ? (
@@ -51,7 +60,18 @@ export function ItemCard({ item, source, time, fresh, onCopy, onDelete, notify }
           {content}
         </a>
       ) : (
-        <p className={`break-words whitespace-pre-wrap ${isLong && !expanded ? 'line-clamp-6' : ''}`}>{content}</p>
+        <>
+          <p className={`break-words whitespace-pre-wrap ${isLong && !expanded ? 'line-clamp-6' : ''}`}>{content}</p>
+          {isLong && (
+            <button
+              type="button"
+              className="mt-1 text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+              onClick={() => setExpanded((v) => !v)}
+            >
+              {expanded ? 'Show less' : 'Show more'}
+            </button>
+          )}
+        </>
       )}
 
       {download.progress !== null && (
@@ -62,26 +82,31 @@ export function ItemCard({ item, source, time, fresh, onCopy, onDelete, notify }
 
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
         {isFile && (
-          <Button className="py-2" onClick={download.start} disabled={download.progress !== null}>
+          <Button size="sm" onClick={download.start} disabled={download.progress !== null}>
             {download.progress === null ? 'Download' : `Downloading ${Math.round(download.progress * 100)}%`}
           </Button>
         )}
         {isLink && (
-          <a href={content} target="_blank" rel="noopener noreferrer" className={buttonClass('primary', 'py-2')}>
+          <a href={content} target="_blank" rel="noopener noreferrer" className={buttonClass('primary', '', 'sm')}>
             Open
           </a>
         )}
         {!isFile && (
-          <Button variant={isLink ? 'secondary' : 'primary'} className="py-2" onClick={() => onCopy(content)}>
+          <Button size="sm" variant={isLink ? 'secondary' : 'primary'} onClick={() => onCopy(content)}>
             Copy
           </Button>
         )}
-        {isLong && !isLink && !isFile && (
-          <Button variant="ghost" className="py-2" onClick={() => setExpanded((v) => !v)}>
-            {expanded ? 'Show less' : 'Show more'}
-          </Button>
-        )}
-        <Button variant="danger" className="ml-auto py-2" onClick={() => onDelete(item)} aria-label="Delete item">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="ml-auto"
+          onClick={() => onToggleKeep(item)}
+          aria-pressed={item.kept}
+          title={item.kept ? 'Let this item expire normally' : 'Stop this item from expiring'}
+        >
+          {item.kept ? 'Unkeep' : 'Keep'}
+        </Button>
+        <Button size="sm" variant="danger" onClick={() => onDelete(item)} aria-label="Delete item">
           Delete
         </Button>
       </div>

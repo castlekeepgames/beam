@@ -1,12 +1,13 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import { buttonClass, type Variant } from './styles'
+import { buttonClass, type Size, type Variant } from './styles'
 
 export function Button({
   variant = 'primary',
+  size = 'md',
   className = '',
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-  return <button type="button" className={buttonClass(variant, className)} {...props} />
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }) {
+  return <button type="button" className={buttonClass(variant, className, size)} {...props} />
 }
 
 /** Full-height centred page with safe-area padding (installed PWA on phones). */
