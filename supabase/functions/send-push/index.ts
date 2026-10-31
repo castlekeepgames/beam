@@ -6,7 +6,7 @@
 // at most once, and only within a few minutes of being created.
 import * as webpush from 'jsr:@negrel/webpush@0.5.0'
 import { adminClient, json } from '../_shared/admin.ts'
-import { notificationFor } from '../_shared/preview.ts'
+import { notificationPayload } from '../_shared/preview.ts'
 
 const MAX_AGE_MS = 5 * 60_000
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -69,8 +69,7 @@ Deno.serve(async (req) => {
   const targets = rows.filter((d) => d.id !== item.source_device_id && d.push_subscription)
   if (targets.length === 0) return json({ sent: 0 })
 
-  const { title, body } = notificationFor(item, sourceName)
-  const payload = JSON.stringify({ title, body, itemId: item.id, kind: item.kind })
+  const payload = JSON.stringify(notificationPayload(item, sourceName))
   const app = await applicationServer()
 
   let sent = 0

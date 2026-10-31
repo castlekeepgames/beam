@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { nameForPastedFile } from '../lib/clipboard'
 
 const hasFiles = (event: DragEvent) => event.dataTransfer?.types.includes('Files') ?? false
 
@@ -48,4 +49,31 @@ export function useFileDrop(onFiles: (files: File[]) => void) {
   }, [])
 
   return dragging
+}
+
+const isEditable = (target: EventTarget | null) =>
+  target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
+
+/**
+ * Ctrl+V of a screenshot or copied files anywhere on the page (desktop) sends
+ * them. Pastes into text fields are left alone (the Composer handles its own).
+ */
+export function usePastedFiles(onFiles: (files: File[]) => void) {
+  const onFilesRef = useRef(onFiles)
+  useEffect(() => {
+    onFilesRef.current = onFiles
+  })
+
+  useEffect(() => {
+    const paste = (event: ClipboardEvent) => {
+      if (isEditable(event.target)) return
+      const files = Array.from(event.clipboardData?.files ?? [])
+      if (files.length === 0) return
+      event.preventDefault()
+      const now = new Date()
+      onFilesRef.current(files.map((f) => nameForPastedFile(f, now)))
+    }
+    window.addEventListener('paste', paste)
+    return () => window.removeEventListener('paste', paste)
+  }, [])
 }

@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type ClipboardEvent } from 'react'
+import { ClipboardUnavailable, nameForPastedFile, readClipboard } from '../lib/clipboard'
 import { MAX_TEXT_LENGTH } from '../lib/items'
 import { parseSingleUrl } from '../lib/links'
 import type { Notify } from './Toast'
@@ -20,18 +21,30 @@ export function Composer({ onSend, onFiles, notify }: Props) {
   const isLink = !isBlank && parseSingleUrl(text) !== null
 
   // Clipboard reads are only allowed from a tap, never in the background.
+  // Text goes into the box to check before sending; an image is sent straight away.
   async function pasteFromClipboard() {
-    if (!navigator.clipboard?.readText) {
-      notify("This browser can't read the clipboard. Long-press the box and choose Paste.", 'error')
-      return
-    }
     try {
-      const clip = await navigator.clipboard.readText()
-      if (clip === '') notify('Your clipboard is empty (or holds something other than text).')
-      else setText(clip)
-    } catch {
-      notify('Clipboard access was blocked. Allow it in the site settings, or long-press the box and choose Paste.', 'error')
+      const clip = await readClipboard()
+      if (clip.kind === 'text') setText(clip.text)
+      else if (clip.kind === 'file') onFiles([clip.file])
+      else notify('Your clipboard is empty.')
+    } catch (err) {
+      notify(
+        err instanceof ClipboardUnavailable
+          ? "This browser can't read the clipboard. Long-press the box and choose Paste."
+          : 'Clipboard access was blocked. Allow it in the site settings, or long-press the box and choose Paste.',
+        'error',
+      )
     }
+  }
+
+  /** Ctrl+V of a screenshot or copied files: send them as files instead of pasting nothing. */
+  function onPaste(event: ClipboardEvent<HTMLTextAreaElement>) {
+    const files = Array.from(event.clipboardData.files)
+    if (files.length === 0) return // plain text pastes normally
+    event.preventDefault()
+    const now = new Date()
+    onFiles(files.map((f) => nameForPastedFile(f, now)))
   }
 
   async function send() {
@@ -53,9 +66,10 @@ export function Composer({ onSend, onFiles, notify }: Props) {
       <textarea
         className={`${inputClass} min-h-28 resize-y`}
         aria-label="Text or link to send"
-        placeholder="Paste text or a link…"
+        placeholder="Paste text, a link or a screenshot…"
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onPaste={onPaste}
         onKeyDown={(e) => {
           // Ctrl+Enter (Cmd+Enter on Mac) sends; plain Enter is a new line.
           if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {

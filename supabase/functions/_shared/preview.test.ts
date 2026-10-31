@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { notificationFor } from './preview'
+import { notificationFor, notificationPayload } from './preview'
+
+describe('notificationPayload', () => {
+  it('adds the URL to link items so the notification can offer "Open link"', () => {
+    expect(
+      notificationPayload({ id: 'i1', kind: 'link', content: 'https://example.com/a', file_name: null }, 'Pixel'),
+    ).toEqual({ title: 'From Pixel', body: 'https://example.com/a', itemId: 'i1', kind: 'link', url: 'https://example.com/a' })
+  })
+
+  it('never includes non-http links or URLs for other kinds', () => {
+    expect(notificationPayload({ id: 'i2', kind: 'link', content: 'javascript:alert(1)', file_name: null }, 'A').url).toBeUndefined()
+    expect(notificationPayload({ id: 'i3', kind: 'text', content: 'https://example.com', file_name: null }, 'A').url).toBeUndefined()
+    expect(notificationPayload({ id: 'i4', kind: 'file', content: null, file_name: 'a.pdf' }, 'A').url).toBeUndefined()
+  })
+})
 
 describe('notificationFor', () => {
   it('names the sending device', () => {

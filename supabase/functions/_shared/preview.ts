@@ -1,4 +1,5 @@
 // Plain TypeScript (no Deno APIs) so Vitest can test it too.
+import { isSafeHttpUrl } from './links.ts'
 
 export interface PreviewItem {
   kind: string
@@ -21,4 +22,21 @@ export function notificationFor(item: PreviewItem, sourceName: string | null): {
   const text = (item.content ?? '').replace(/\s+/g, ' ').trim()
   if (item.kind === 'link') return { title, body: truncate(text, MAX_BODY) }
   return { title, body: truncate(text, MAX_BODY) || '(empty)' }
+}
+
+export interface PushPayload {
+  title: string
+  body: string
+  itemId: string
+  kind: string
+  /** For links: shown as an "Open link" button on the notification. */
+  url?: string
+}
+
+/** Everything the service worker needs to show the notification. */
+export function notificationPayload(item: PreviewItem & { id: string }, sourceName: string | null): PushPayload {
+  const { title, body } = notificationFor(item, sourceName)
+  const payload: PushPayload = { title, body, itemId: item.id, kind: item.kind }
+  if (item.kind === 'link' && item.content && isSafeHttpUrl(item.content)) payload.url = item.content
+  return payload
 }

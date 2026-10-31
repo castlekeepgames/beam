@@ -31,6 +31,23 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#0b0b12',
         theme_color: '#4f46e5',
+        // Right-click the taskbar icon (Windows) or long-press the app icon (Android).
+        shortcuts: [
+          {
+            name: 'Send clipboard',
+            short_name: 'Send clipboard',
+            description: "Send what's on your clipboard to your other devices",
+            url: `${base}?action=clipboard`,
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Receive from someone',
+            short_name: 'Receive',
+            description: 'Show a QR code so someone can send you text or files',
+            url: `${base}?action=receive`,
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
         // Android share sheet (installed app only). Handled in src/sw.ts.
         share_target: {
           action: `${base}share-target`,

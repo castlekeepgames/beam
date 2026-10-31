@@ -77,3 +77,20 @@ export function useOpenItem(items: Item[], highlight: (id: string) => void) {
     highlight(target.id)
   }, [target, items, highlight])
 }
+
+let launchHandled = false
+
+/**
+ * App-icon shortcuts open Beam at ?action=receive or ?action=clipboard.
+ * Runs once per launch; the parameter is removed so a reload doesn't repeat it.
+ */
+export function useLaunchAction(onReceive: () => void, onClipboard: () => void) {
+  useEffect(() => {
+    const action = new URLSearchParams(window.location.search).get('action')
+    if (!action || launchHandled) return
+    launchHandled = true
+    clearParam('action')
+    if (action === 'receive') onReceive()
+    else if (action === 'clipboard') onClipboard()
+  }, [onReceive, onClipboard])
+}

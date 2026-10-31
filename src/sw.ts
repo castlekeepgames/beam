@@ -4,6 +4,7 @@
 import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
+import { isSafeHttpUrl } from '../supabase/functions/_shared/links'
 import { stashShare } from './shared/shareStash'
 
 declare let self: ServiceWorkerGlobalScope
@@ -38,7 +39,12 @@ interface PushPayload {
   title?: string
   body?: string
   itemId?: string
+  /** Set for link items: adds an "Open link" button. */
+  url?: string
 }
+
+/** Notification options plus `actions` (supported by Chrome/Edge, missing from TS's lib). */
+type BeamNotificationOptions = NotificationOptions & { actions?: { action: string; title: string }[] }
 
 self.addEventListener('push', (event) => {
   let data: PushPayload = {}
@@ -54,19 +60,29 @@ self.addEventListener('push', (event) => {
       const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       if (windows.some((w) => w.visibilityState === 'visible' && w.focused)) return
 
-      await self.registration.showNotification(data.title ?? 'Beam', {
+      const url = data.url && isSafeHttpUrl(data.url) ? data.url : null
+      const options: BeamNotificationOptions = {
         body: data.body ?? 'New item',
         icon: scoped('pwa-192x192.png'),
         tag: data.itemId ?? 'beam',
-        data: { itemId: data.itemId ?? null },
-      })
+        data: { itemId: data.itemId ?? null, url },
+        actions: url ? [{ action: 'open-link', title: 'Open link' }] : [],
+      }
+      await self.registration.showNotification(data.title ?? 'Beam', options)
     })(),
   )
 })
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const itemId = (event.notification.data as { itemId?: string | null } | null)?.itemId ?? null
+  const { itemId = null, url = null } = (event.notification.data ?? {}) as { itemId?: string | null; url?: string | null }
+
+  // "Open link" button: straight to the link in the browser, skipping Beam.
+  if (event.action === 'open-link' && url && isSafeHttpUrl(url)) {
+    event.waitUntil(self.clients.openWindow(url).then(() => undefined))
+    return
+  }
+
   const target = scoped(itemId ? `./?item=${encodeURIComponent(itemId)}` : './')
 
   event.waitUntil(

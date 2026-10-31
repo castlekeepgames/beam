@@ -1,9 +1,10 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
-import { useFileDrop } from '../hooks/useFileDrop'
-import { useOpenItem, useShareIntake } from '../hooks/useIntents'
+import { useFileDrop, usePastedFiles } from '../hooks/useFileDrop'
+import { useLaunchAction, useOpenItem, useShareIntake } from '../hooks/useIntents'
 import { useItems, type Connection } from '../hooks/useItems'
 import { useOnline } from '../hooks/useOnline'
 import { useUploads } from '../hooks/useUploads'
+import { ClipboardUnavailable, clipboardReadGranted, readClipboard, type ClipboardContent } from '../lib/clipboard'
 import { syncPush } from '../lib/push'
 import { formatRelative } from '../lib/time'
 import type { Device, Item } from '../lib/types'
@@ -50,6 +51,7 @@ export function Home({ userId, device, onRename }: Props) {
   const { notify, view: toast } = useToast()
   const { uploads, addFiles, cancel } = useUploads({ userId, deviceId: device.id, onItem: addItem, notify })
   const dragging = useFileDrop(addFiles)
+  usePastedFiles(addFiles)
   const online = useOnline()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [receiveOpenedAt, setReceiveOpenedAt] = useState<number | null>(null)
@@ -57,6 +59,51 @@ export function Home({ userId, device, onRename }: Props) {
 
   useShareIntake(sendText, addFiles, notify)
   useOpenItem(items, markFresh)
+
+  // "Send clipboard": text is sent as-is, an image as a file.
+  const [clipboardPrompt, setClipboardPrompt] = useState(false)
+  const sendContent = useCallback(
+    async (clip: ClipboardContent) => {
+      if (clip.kind === 'empty') return notify('Your clipboard is empty.')
+      if (clip.kind === 'file') return addFiles([clip.file])
+      try {
+        await sendText(clip.text)
+        notify('Sent from clipboard ✓')
+      } catch {
+        notify("Couldn't send. Check your connection and try again.", 'error')
+      }
+    },
+    [sendText, addFiles, notify],
+  )
+  const sendClipboard = useCallback(async () => {
+    setClipboardPrompt(false)
+    try {
+      await sendContent(await readClipboard())
+    } catch (err) {
+      notify(
+        err instanceof ClipboardUnavailable
+          ? "This browser can't read the clipboard."
+          : 'Clipboard access was blocked. Allow it in the site settings.',
+        'error',
+      )
+    }
+  }, [sendContent, notify])
+  // From the app-icon shortcut: send straight away if reading is already allowed
+  // (and the window has focus); otherwise ask for one tap. Never a surprise prompt.
+  const launchClipboard = useCallback(() => {
+    void (async () => {
+      if (await clipboardReadGranted()) {
+        try {
+          return await sendContent(await readClipboard())
+        } catch {
+          // e.g. the window isn't focused yet; fall through to the one-tap bar
+        }
+      }
+      setClipboardPrompt(true)
+    })()
+  }, [sendContent])
+  const openReceive = useCallback(() => setReceiveOpenedAt(Date.now()), [])
+  useLaunchAction(openReceive, launchClipboard)
 
   // Keep this device's push subscription current if notifications are already on.
   useEffect(() => {
@@ -125,7 +172,7 @@ export function Home({ userId, device, onRename }: Props) {
         <Button
           variant="secondary"
           size="sm"
-          onClick={() => setReceiveOpenedAt(Date.now())}
+          onClick={openReceive}
           title="Show a QR code so someone without Beam can send you text or files"
         >
           Receive
@@ -142,6 +189,18 @@ export function Home({ userId, device, onRename }: Props) {
           className="mb-4 rounded-xl bg-amber-100 px-3.5 py-2.5 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200"
         >
           You're offline. Sending won't work until you reconnect; anything sent meanwhile will appear then.
+        </div>
+      )}
+
+      {clipboardPrompt && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-indigo-50 px-3.5 py-2.5 text-sm text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200">
+          <span className="flex-1">Send what's on your clipboard?</span>
+          <Button size="sm" onClick={sendClipboard}>
+            Send clipboard
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setClipboardPrompt(false)} aria-label="Dismiss">
+            ✕
+          </Button>
         </div>
       )}
 
