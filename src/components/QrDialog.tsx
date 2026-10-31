@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { encode } from 'uqr'
 import { formatBytes } from '../lib/files'
-import { FILE_QR_SECONDS, formatCountdown, qrAvailability, qrPath, qrValue } from '../lib/qr'
+import { FILE_QR_SECONDS, formatCountdown, qrErrorCorrection, qrPath, qrPayload, type QrPayload } from '../lib/qr'
 import { signedUrl } from '../lib/storage'
 import type { Item } from '../lib/types'
 import { Button } from './ui'
@@ -30,7 +30,7 @@ export default function QrDialog({ item, onClose }: { item: Item; onClose: () =>
         role="dialog"
         aria-modal="true"
         aria-label="QR code"
-        className="flex max-h-full w-full max-w-sm flex-col items-center gap-3 overflow-y-auto rounded-2xl bg-white p-5 text-zinc-900 shadow-xl dark:bg-zinc-900 dark:text-zinc-100"
+        className="flex max-h-full w-full max-w-sm flex-col sm:max-w-lg items-center gap-3 overflow-y-auto rounded-2xl bg-white p-5 text-zinc-900 shadow-xl dark:bg-zinc-900 dark:text-zinc-100"
         onClick={(e) => e.stopPropagation()}
       >
         {item.kind === 'file' ? <FileQr item={item} /> : <TextQr item={item} />}
@@ -47,18 +47,35 @@ const appBaseUrl = () => new URL(import.meta.env.BASE_URL, window.location.origi
 
 function TextQr({ item }: { item: Item }) {
   const text = item.content ?? ''
-  const base = appBaseUrl()
-  if (qrAvailability(item, base) === 'too-long') {
+  const [payload, setPayload] = useState<{ for: string; result: QrPayload } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    qrPayload(item, appBaseUrl())
+      .then((result) => {
+        if (!cancelled) setPayload({ for: text, result })
+      })
+      .catch(() => {
+        if (!cancelled) setPayload({ for: text, result: { status: 'none' } })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [item, text])
+
+  const result = payload?.for === text ? payload.result : null
+  if (!result) return <p className="py-10 text-sm text-zinc-500">Making the code…</p>
+  if (result.status !== 'ok') {
     return (
       <p className="py-6 text-center text-sm text-zinc-600 dark:text-zinc-300">
         This text is too long for a QR code ({text.length.toLocaleString()} characters). Use <strong>Copy</strong>{' '}
-        instead.
+        instead, or send it as a file.
       </p>
     )
   }
   return (
     <>
-      <QrCode value={qrValue(item, base)} />
+      <QrCode value={result.value} />
       {item.kind === 'link' ? (
         <p className="w-full text-center text-sm break-all text-zinc-600 dark:text-zinc-300">{text}</p>
       ) : (
@@ -148,12 +165,13 @@ function FileQr({ item }: { item: Item }) {
 /** Dark modules on a white card (with quiet zone) so it scans in dark mode too. */
 function QrCode({ value }: { value: string }) {
   const { path, size } = useMemo(() => {
-    const qr = encode(value, { ecc: 'M', border: 0 })
+    const qr = encode(value, { ecc: qrErrorCorrection(value), border: 0 })
     return { path: qrPath(qr.data), size: qr.size }
   }, [value])
   const quiet = 4
   return (
-    <div className="w-full max-w-72 rounded-xl bg-white p-2">
+    // Bigger on wider screens: dense codes scan far more reliably when large.
+    <div className="w-full max-w-72 rounded-xl bg-white p-2 sm:max-w-md">
       <svg
         viewBox={`${-quiet} ${-quiet} ${size + quiet * 2} ${size + quiet * 2}`}
         className="block h-auto w-full"

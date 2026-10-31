@@ -1,54 +1,101 @@
 import { encode } from 'uqr'
 import { describe, expect, it } from 'vitest'
-import { formatCountdown, qrAvailability, QR_MAX_CHARS, qrPath, qrValue, readSharedText, textViewUrl } from './qr'
+import {
+  formatCountdown,
+  isSharedTextHash,
+  QR_COMFORT_CHARS,
+  qrErrorCorrection,
+  QR_MAX_CHARS,
+  qrPath,
+  qrPayload,
+  readSharedText,
+  textViewUrl,
+} from './qr'
 
 const BASE = 'https://castlekeepgames.github.io/beam/'
 
+// A realistic ~600-character message (the kind that was rejected before compression).
+const MESSAGE =
+  'Hi! Quick update for tomorrow: the meeting has moved to 10:30 in the small conference room on the second floor, ' +
+  'not the usual one. Please bring the printed copies of the quarterly report and the notes from last week. ' +
+  'If you are running late, send me a message and I will start without you and fill you in afterwards. ' +
+  'Also, the parking garage on Main Street is closed for repairs this week, so use the one behind the library instead. ' +
+  'Lunch will be provided after the meeting, so no need to bring anything. Let me know if you have any questions ' +
+  'before then, otherwise see you there. Thanks!'
+
 describe('shared-text links', () => {
-  it('round-trips text, including accents, emoji and new lines', () => {
+  it('round-trips text, including accents, emoji and new lines', async () => {
     const text = 'Meet at 6 by the café 🔌\nbring the charger'
-    const url = textViewUrl(text, BASE)
-    expect(url.startsWith(`${BASE}#t=`)).toBe(true)
-    expect(readSharedText(new URL(url).hash)).toBe(text)
+    const url = await textViewUrl(text, BASE)
+    expect(isSharedTextHash(new URL(url).hash)).toBe(true)
+    expect(await readSharedText(new URL(url).hash)).toBe(text)
   })
 
-  it('uses only URL-safe characters after the #', () => {
-    expect(textViewUrl('??>>~~ ÿÿÿ', BASE).split('#t=')[1]).toMatch(/^[A-Za-z0-9_-]+$/)
+  it('keeps very short text uncompressed (compression would make it longer)', async () => {
+    expect(await textViewUrl('hi', BASE)).toBe(`${BASE}#t=aGk`)
   })
 
-  it('ignores other hashes and corrupt data', () => {
-    expect(readSharedText('')).toBeNull()
-    expect(readSharedText('#item=1')).toBeNull()
-    expect(readSharedText('#t=%%%')).toBeNull()
-    expect(readSharedText('#t=_w')).toBeNull() // not valid UTF-8
+  it('compresses longer text so a ~600-character message fits', async () => {
+    expect(MESSAGE.length).toBeGreaterThan(580)
+    const url = await textViewUrl(MESSAGE, BASE)
+    expect(url).toContain('#z=')
+    expect(url.length).toBeLessThanOrEqual(QR_MAX_CHARS)
+    expect(await readSharedText(new URL(url).hash)).toBe(MESSAGE)
+  })
+
+  it('uses only URL-safe characters after the #', async () => {
+    expect((await textViewUrl(MESSAGE, BASE)).split('#')[1].slice(2)).toMatch(/^[A-Za-z0-9_-]+$/)
+  })
+
+  it('ignores other hashes and corrupt data', async () => {
+    expect(isSharedTextHash('#item=1')).toBe(false)
+    expect(await readSharedText('')).toBeNull()
+    expect(await readSharedText('#item=1')).toBeNull()
+    expect(await readSharedText('#t=%%%')).toBeNull()
+    expect(await readSharedText('#t=_w')).toBeNull() // not valid UTF-8
+    expect(await readSharedText('#z=AAAA')).toBeNull() // not valid deflate
   })
 })
 
-describe('qrValue', () => {
-  it('links encode as themselves; text becomes a shared-text link', () => {
-    expect(qrValue({ kind: 'link', content: 'https://example.com' }, BASE)).toBe('https://example.com')
-    expect(qrValue({ kind: 'text', content: 'hi' }, BASE)).toBe(`${BASE}#t=aGk`)
+describe('qrPayload', () => {
+  it('links encode as themselves; text becomes a shared-text link', async () => {
+    expect(await qrPayload({ kind: 'link', content: 'https://example.com' }, BASE)).toEqual({
+      status: 'ok',
+      value: 'https://example.com',
+    })
+    expect(await qrPayload({ kind: 'text', content: 'hi' }, BASE)).toEqual({ status: 'ok', value: `${BASE}#t=aGk` })
+  })
+
+  it('accepts the ~600-character message', async () => {
+    expect((await qrPayload({ kind: 'text', content: MESSAGE }, BASE)).status).toBe('ok')
+  })
+
+  it('rejects text that will not fit even compressed', async () => {
+    // Pseudo-random text (xorshift) barely compresses.
+    let seed = 2463534242
+    const noise = Array.from({ length: 900 }, () => {
+      seed ^= seed << 13
+      seed ^= seed >>> 17
+      seed ^= seed << 5
+      return String.fromCharCode(33 + ((seed >>> 0) % 90))
+    }).join('')
+    expect(await qrPayload({ kind: 'text', content: noise }, BASE)).toEqual({ status: 'too-long', length: 900 })
+  })
+
+  it('has nothing to show for empty text', async () => {
+    expect(await qrPayload({ kind: 'text', content: '' }, BASE)).toEqual({ status: 'none' })
   })
 })
 
-describe('qrAvailability', () => {
-  it('allows links and short text', () => {
-    expect(qrAvailability({ kind: 'link', content: 'https://example.com', file_path: null }, BASE)).toBe('ok')
-    expect(qrAvailability({ kind: 'text', content: 'x'.repeat(400), file_path: null }, BASE)).toBe('ok')
+describe('qrErrorCorrection', () => {
+  it('uses medium correction while comfortable, low for long payloads', () => {
+    expect(qrErrorCorrection('x'.repeat(QR_COMFORT_CHARS))).toBe('M')
+    expect(qrErrorCorrection('x'.repeat(QR_COMFORT_CHARS + 1))).toBe('L')
   })
 
-  it('flags text whose link would be too long to scan', () => {
-    expect(qrAvailability({ kind: 'text', content: 'x'.repeat(450), file_path: null }, BASE)).toBe('too-long')
-    expect(qrValue({ kind: 'text', content: 'x'.repeat(450) }, BASE).length).toBeGreaterThan(QR_MAX_CHARS)
-  })
-
-  it('allows files that have a stored object', () => {
-    expect(qrAvailability({ kind: 'file', content: null, file_path: 'u/i/a.pdf' }, BASE)).toBe('ok')
-    expect(qrAvailability({ kind: 'file', content: null, file_path: null }, BASE)).toBe('none')
-  })
-
-  it('has nothing to show for empty text', () => {
-    expect(qrAvailability({ kind: 'text', content: '', file_path: null }, BASE)).toBe('none')
+  it('a maximum-length payload still fits in a version 25 code or smaller', () => {
+    const value = 'x'.repeat(QR_MAX_CHARS)
+    expect(encode(value, { ecc: qrErrorCorrection(value), border: 0 }).version).toBeLessThanOrEqual(25)
   })
 })
 

@@ -1,11 +1,40 @@
-import { useState } from 'react'
-import { Button, Logo, Page } from './ui'
+import { useEffect, useState } from 'react'
+import { readSharedText } from '../lib/qr'
+import { Button, CenteredCard, Logo, Page } from './ui'
 
 /**
  * What someone sees after scanning a text QR code: no sign-in, no Supabase.
- * The text came from the link's #fragment, which never leaves their phone.
+ * The text comes from the link's #fragment, which never leaves their phone.
  */
-export function SharedText({ text }: { text: string }) {
+export function SharedText({ hash }: { hash: string }) {
+  const [state, setState] = useState<{ status: 'loading' } | { status: 'ok'; text: string } | { status: 'bad' }>({
+    status: 'loading',
+  })
+
+  useEffect(() => {
+    let cancelled = false
+    readSharedText(hash).then((text) => {
+      if (!cancelled) setState(text === null ? { status: 'bad' } : { status: 'ok', text })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [hash])
+
+  if (state.status === 'loading') return null
+  if (state.status === 'bad') {
+    return (
+      <CenteredCard title="Couldn't read this code">
+        <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+          The link from the QR code looks incomplete. Try scanning it again, holding the phone a little further away.
+        </p>
+      </CenteredCard>
+    )
+  }
+  return <SharedTextView text={state.text} />
+}
+
+function SharedTextView({ text }: { text: string }) {
   const [copied, setCopied] = useState<'idle' | 'done' | 'failed'>('idle')
 
   async function copy() {
