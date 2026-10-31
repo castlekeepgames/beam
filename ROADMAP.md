@@ -85,7 +85,7 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Paste screenshots/images/files: Ctrl+V in the box or anywhere on the page sends them (screenshots get a timestamped name); **Paste** button sends a copied image
 - [x] App-icon shortcuts: **Send clipboard** and **Receive** (Windows taskbar right-click, Android long-press)
 - [x] **Open link** button on link notifications
-- [ ] **You:** run the Phase 8 checklist
+- [x] **You:** run the Phase 8 checklist (approved 2026-10-31)
 
 ## Later (not started)
 - [ ] Windows tray app (Tauri) with global hotkey to send clipboard and auto-copy incoming text

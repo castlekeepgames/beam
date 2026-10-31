@@ -187,6 +187,8 @@ You need a second phone that isn't signed in to Beam (a friend's, or a browser i
 
 ## Phase 8 — Quick wins
 
+**Status:** approved, 2026-10-31.
+
 Close and reopen Beam on each device first (on the PC, Ctrl+Shift+R in the Beam window if needed).
 
 **Pasting images (Windows)**

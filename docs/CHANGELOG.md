@@ -62,3 +62,6 @@ Oldest first.
 - App-icon shortcuts: **Send clipboard** and **Receive**.
 - **Open link** button on notifications for links.
 - 84 unit tests.
+
+## 2026-10-31 — Phase 8 (complete)
+- Image paste, app-icon shortcuts and Open link approved on real devices.
