@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
-import { extensionLabel, formatBytes } from '../lib/files'
+import { canViewImage, extensionLabel, formatBytes } from '../lib/files'
 import { isSafeHttpUrl } from '../lib/links'
 import { describeStorageError, fetchWithProgress, saveBlob, signedUrl, thumbnailUrl } from '../lib/storage'
 import type { Item } from '../lib/types'
@@ -17,6 +17,8 @@ const LONG_TEXT_LINES = 6
 interface Props {
   item: Item
   source: string
+  /** For items sent to one device: who it's for, e.g. "Pixel" or "This device". */
+  target: string | null
   time: string
   fresh: boolean
   onCopy: (text: string) => void
@@ -25,7 +27,7 @@ interface Props {
   notify: Notify
 }
 
-export function ItemCard({ item, source, time, fresh, onCopy, onDelete, onToggleKeep, notify }: Props) {
+export function ItemCard({ item, source, target, time, fresh, onCopy, onDelete, onToggleKeep, notify }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [showQr, setShowQr] = useState(false)
   const closeQr = useCallback(() => setShowQr(false), [])
@@ -43,8 +45,15 @@ export function ItemCard({ item, source, time, fresh, onCopy, onDelete, onToggle
       }`}
     >
       <p className="mb-1.5 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-        <span>
-          <span className="font-medium text-zinc-700 dark:text-zinc-300">{source}</span> · {time}
+        <span className="min-w-0 truncate">
+          <span className="font-medium text-zinc-700 dark:text-zinc-300">{source}</span>
+          {target && (
+            <>
+              {' → '}
+              <span className="font-medium text-indigo-700 dark:text-indigo-300">{target} only</span>
+            </>
+          )}{' '}
+          · {time}
         </span>
         {item.kept && (
           <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-indigo-700 uppercase dark:bg-indigo-950 dark:text-indigo-300">
@@ -54,7 +63,7 @@ export function ItemCard({ item, source, time, fresh, onCopy, onDelete, onToggle
       </p>
 
       {isFile ? (
-        <FileSummary item={item} />
+        <FileSummary item={item} onDownload={download.start} />
       ) : isLink ? (
         <a
           href={content}
@@ -134,21 +143,114 @@ export function ItemCard({ item, source, time, fresh, onCopy, onDelete, onToggle
   )
 }
 
-function FileSummary({ item }: { item: Item }) {
+function FileSummary({ item, onDownload }: { item: Item; onDownload: () => void }) {
   const thumb = useThumbnail(item.thumb_path)
+  const [viewing, setViewing] = useState(false)
+  const closeViewer = useCallback(() => setViewing(false), [])
   const name = item.file_name ?? 'File'
+  const viewable = !!item.file_path && canViewImage(item.mime_type ?? '')
+
+  const preview = thumb ? (
+    <img src={thumb} alt="" className="h-16 w-16 shrink-0 rounded-xl bg-zinc-100 object-cover dark:bg-zinc-800" />
+  ) : (
+    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xs font-bold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300">
+      {extensionLabel(name)}
+    </div>
+  )
+
   return (
     <div className="flex items-center gap-3">
-      {thumb ? (
-        <img src={thumb} alt="" className="h-16 w-16 shrink-0 rounded-xl bg-zinc-100 object-cover dark:bg-zinc-800" />
+      {viewable ? (
+        <button
+          type="button"
+          className="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+          onClick={() => setViewing(true)}
+          aria-label={`View ${name}`}
+          title="View full size"
+        >
+          {preview}
+        </button>
       ) : (
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xs font-bold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300">
-          {extensionLabel(name)}
-        </div>
+        preview
+      )}
+      {viewing && item.file_path && (
+        <PhotoViewer path={item.file_path} name={name} onDownload={onDownload} onClose={closeViewer} />
       )}
       <div className="min-w-0">
         <p className="line-clamp-2 font-medium break-all">{name}</p>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">{formatBytes(item.file_size ?? 0)}</p>
+      </div>
+    </div>
+  )
+}
+
+/** Full-screen view of an image item, loaded through a short-lived signed URL. */
+function PhotoViewer({
+  path,
+  name,
+  onDownload,
+  onClose,
+}: {
+  path: string
+  name: string
+  onDownload: () => void
+  onClose: () => void
+}) {
+  const [state, setState] = useState<{ status: 'loading' } | { status: 'ready'; url: string } | { status: 'error' }>({
+    status: 'loading',
+  })
+
+  useEffect(() => {
+    let cancelled = false
+    signedUrl(path, 600)
+      .then((url) => {
+        if (!cancelled) setState({ status: 'ready', url })
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: 'error' })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [path])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={name}
+      className="fixed inset-0 z-50 flex flex-col bg-black/95 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+      onClick={onClose}
+    >
+      <div className="flex items-center gap-2 p-3 text-white" onClick={(e) => e.stopPropagation()}>
+        <p className="min-w-0 flex-1 truncate text-sm">{name}</p>
+        <Button size="sm" variant="secondary" onClick={onDownload}>
+          Download
+        </Button>
+        <Button size="sm" variant="ghost" className="text-white! hover:bg-white/10!" onClick={onClose} aria-label="Close">
+          ✕
+        </Button>
+      </div>
+      <div className="flex min-h-0 flex-1 items-center justify-center p-2">
+        {state.status === 'loading' && <p className="text-sm text-zinc-400">Loading…</p>}
+        {state.status === 'error' && <p className="text-sm text-zinc-400">Couldn't load the photo. Check your connection.</p>}
+        {state.status === 'ready' && (
+          <img
+            src={state.url}
+            alt={name}
+            className="max-h-full max-w-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+            onError={() => setState({ status: 'error' })}
+          />
+        )}
       </div>
     </div>
   )

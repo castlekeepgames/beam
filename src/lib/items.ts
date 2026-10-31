@@ -34,3 +34,11 @@ export function mergeItems(current: Item[], incoming: Item[], now = Date.now()):
 export function removeItem(current: Item[], id: string): Item[] {
   return current.filter((item) => item.id !== id)
 }
+
+/**
+ * Items sent to one device show only on that device and the one that sent
+ * them. Everything else (including guest items) shows everywhere.
+ */
+export function isVisibleTo(item: Pick<Item, 'target_device_id' | 'source_device_id'>, deviceId: string): boolean {
+  return !item.target_device_id || item.target_device_id === deviceId || item.source_device_id === deviceId
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ITEM_LIFETIME_MS, ITEM_LIMIT, isExpired, keepChange, mergeItems, removeItem } from './items'
+import { ITEM_LIFETIME_MS, ITEM_LIMIT, isExpired, isVisibleTo, keepChange, mergeItems, removeItem } from './items'
 import type { Item } from './types'
 
 const NOW = Date.parse('2026-10-30T12:00:00Z')
@@ -20,6 +20,7 @@ function item(id: string, createdMinutesAgo: number, overrides: Partial<Item> = 
     expires_at: new Date(created + 24 * 3600_000).toISOString(),
     kept: false,
     from_guest: false,
+    target_device_id: null,
     ...overrides,
   }
 }
@@ -89,5 +90,18 @@ describe('isExpired / removeItem', () => {
 
   it('removes by id', () => {
     expect(removeItem([item('a', 1), item('b', 2)], 'a').map((i) => i.id)).toEqual(['b'])
+  })
+})
+
+describe('isVisibleTo', () => {
+  it('shows items for all devices everywhere', () => {
+    expect(isVisibleTo({ target_device_id: null, source_device_id: 'pc' }, 'phone')).toBe(true)
+  })
+
+  it('shows a targeted item only to the target and the sender', () => {
+    const item = { target_device_id: 'phone', source_device_id: 'pc' }
+    expect(isVisibleTo(item, 'phone')).toBe(true)
+    expect(isVisibleTo(item, 'pc')).toBe(true)
+    expect(isVisibleTo(item, 'laptop')).toBe(false)
   })
 })

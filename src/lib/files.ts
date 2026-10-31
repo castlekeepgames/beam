@@ -28,6 +28,11 @@ export function canThumbnail(mimeType: string): boolean {
   return /^image\/(jpeg|png|webp|gif|bmp|avif)$/i.test(mimeType)
 }
 
+/** Image types every browser can show full-size (HEIC, for example, can't). */
+export function canViewImage(mimeType: string): boolean {
+  return /^image\/(jpeg|png|webp|gif|bmp|avif|svg\+xml)$/i.test(mimeType)
+}
+
 /** Short label for the file icon, e.g. "PDF", "ZIP". */
 export function extensionLabel(fileName: string): string {
   const dot = fileName.lastIndexOf('.')

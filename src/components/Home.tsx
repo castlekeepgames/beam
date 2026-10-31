@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useFileDrop, usePastedFiles } from '../hooks/useFileDrop'
 import { useLaunchAction, useOpenItem, useShareIntake } from '../hooks/useIntents'
 import { useItems, type Connection } from '../hooks/useItems'
@@ -6,12 +6,14 @@ import { useOnline } from '../hooks/useOnline'
 import { useUploads } from '../hooks/useUploads'
 import { ClipboardUnavailable, clipboardReadGranted, readClipboard, type ClipboardContent } from '../lib/clipboard'
 import { syncPush } from '../lib/push'
+import { matchesSearch } from '../lib/search'
 import { formatRelative } from '../lib/time'
 import type { Device, Item } from '../lib/types'
 import { Composer } from './Composer'
 import { ItemCard } from './ItemCard'
 import { Settings } from './Settings'
 import { useToast } from './Toast'
+import { inputClass } from './styles'
 import { UploadList } from './UploadList'
 import { Button, Logo, Page } from './ui'
 
@@ -46,10 +48,40 @@ interface Props {
 }
 
 export function Home({ userId, device, onRename }: Props) {
-  const { items, deviceNames, loaded, loadError, connection, freshIds, markFresh, retry, sendText, addItem, deleteItem, toggleKeep } =
-    useItems(userId, device.id)
+  const {
+    items,
+    devices,
+    deviceNames,
+    loaded,
+    loadError,
+    connection,
+    freshIds,
+    markFresh,
+    retry,
+    sendText: sendTextTo,
+    addItem,
+    deleteItem,
+    toggleKeep,
+    clearAll,
+    removeDevice,
+  } = useItems(userId, device.id)
   const { notify, view: toast } = useToast()
-  const { uploads, addFiles, cancel } = useUploads({ userId, deviceId: device.id, onItem: addItem, notify })
+
+  // "To:" picker. Falls back to all devices if the chosen one is removed.
+  const otherDevices = useMemo(() => devices.filter((d) => d.id !== device.id), [devices, device.id])
+  const [chosenTarget, setChosenTarget] = useState<string | null>(null)
+  const target = chosenTarget && otherDevices.some((d) => d.id === chosenTarget) ? chosenTarget : null
+  const sendText = useCallback((text: string) => sendTextTo(text, target), [sendTextTo, target])
+
+  const [search, setSearch] = useState('')
+
+  const { uploads, addFiles, cancel } = useUploads({
+    userId,
+    deviceId: device.id,
+    targetDeviceId: target,
+    onItem: addItem,
+    notify,
+  })
   const dragging = useFileDrop(addFiles)
   usePastedFiles(addFiles)
   const online = useOnline()
@@ -151,6 +183,17 @@ export function Home({ userId, device, onRename }: Props) {
     if (sourceId === device.id) return 'This device'
     return (sourceId && deviceNames[sourceId]) || 'Unknown device'
   }
+  const targetLabel = (item: Item) => {
+    if (!item.target_device_id) return null
+    if (item.target_device_id === device.id) return 'This device'
+    return deviceNames[item.target_device_id] ?? 'Another device'
+  }
+
+  const shownItems = search.trim()
+    ? items.filter((item) =>
+        matchesSearch(item, search, [sourceLabel(item), targetLabel(item) ?? ''].filter(Boolean)),
+      )
+    : items
 
   // Count guest items that arrive while the Receive dialog is open.
   const receivedSince = receiveOpenedAt
@@ -205,10 +248,25 @@ export function Home({ userId, device, onRename }: Props) {
       )}
 
       {settingsOpen && (
-        <Settings device={device} onRename={onRename} notify={notify} onClose={() => setSettingsOpen(false)} />
+        <Settings
+          device={device}
+          devices={devices}
+          onRename={onRename}
+          onRemoveDevice={removeDevice}
+          onClearAll={clearAll}
+          notify={notify}
+          onClose={() => setSettingsOpen(false)}
+        />
       )}
 
-      <Composer onSend={sendText} onFiles={addFiles} notify={notify} />
+      <Composer
+        onSend={sendText}
+        onFiles={addFiles}
+        notify={notify}
+        otherDevices={otherDevices}
+        target={target}
+        onTarget={setChosenTarget}
+      />
 
       <UploadList uploads={uploads} onCancel={cancel} />
 
@@ -217,6 +275,32 @@ export function Home({ userId, device, onRename }: Props) {
           <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Recent</h2>
           <p className="text-xs text-zinc-400 dark:text-zinc-500">Items expire after 24 hours unless kept</p>
         </div>
+
+        {items.length > 0 && (
+          <div className="relative mb-3">
+            <input
+              type="search"
+              className={`${inputClass} py-2 pr-9 text-sm`}
+              placeholder="Search text, links, file names…"
+              aria-label="Search items"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setSearch('')
+              }}
+            />
+            {search && (
+              <button
+                type="button"
+                className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md px-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        )}
 
         {loadError && (
           <div className="mb-3 flex items-center gap-3 rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700 dark:bg-red-950/60 dark:text-red-300">
@@ -231,13 +315,18 @@ export function Home({ userId, device, onRename }: Props) {
           <p className="text-sm text-zinc-500">Loading…</p>
         ) : loaded && items.length === 0 ? (
           <EmptyState />
+        ) : shownItems.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+            Nothing matches “{search.trim()}”.
+          </p>
         ) : (
           <ul className="flex flex-col gap-2.5">
-            {items.map((item) => (
+            {shownItems.map((item) => (
               <ItemCard
                 key={item.id}
                 item={item}
                 source={sourceLabel(item)}
+                target={targetLabel(item)}
                 time={formatRelative(item.created_at, now)}
                 fresh={freshIds.has(item.id)}
                 onCopy={copy}

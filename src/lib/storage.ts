@@ -163,6 +163,17 @@ export async function thumbnailUrl(path: string): Promise<string> {
   return url
 }
 
+/** Supabase Free plan file storage (project-wide). */
+export const FREE_STORAGE_BYTES = 1024 ** 3
+
+/** How much of the file bucket you're using, from Storage's own records. */
+export async function getStorageUsed(): Promise<{ bytes: number; files: number }> {
+  const { data, error } = await supabase.rpc('beam_storage_used')
+  if (error) throw new Error(error.message)
+  const row = (Array.isArray(data) ? data[0] : data) as { bytes: number | string; files: number } | undefined
+  return { bytes: Number(row?.bytes ?? 0), files: Number(row?.files ?? 0) }
+}
+
 /** Best-effort removal of storage objects (anything missed is swept by the cleanup job). */
 export async function removeObjects(paths: string[]): Promise<void> {
   if (paths.length === 0) return

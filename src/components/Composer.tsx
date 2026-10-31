@@ -2,6 +2,7 @@ import { useRef, useState, type ClipboardEvent } from 'react'
 import { ClipboardUnavailable, nameForPastedFile, readClipboard } from '../lib/clipboard'
 import { MAX_TEXT_LENGTH } from '../lib/items'
 import { parseSingleUrl } from '../lib/links'
+import type { Device } from '../lib/types'
 import type { Notify } from './Toast'
 import { inputClass } from './styles'
 import { Button } from './ui'
@@ -10,9 +11,14 @@ interface Props {
   onSend: (text: string) => Promise<void>
   onFiles: (files: File[]) => void
   notify: Notify
+  /** Your other devices, for the "To:" picker (hidden when there are none). */
+  otherDevices: Device[]
+  /** Chosen device, or null for all devices. */
+  target: string | null
+  onTarget: (id: string | null) => void
 }
 
-export function Composer({ onSend, onFiles, notify }: Props) {
+export function Composer({ onSend, onFiles, notify, otherDevices, target, onTarget }: Props) {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
 
@@ -78,6 +84,25 @@ export function Composer({ onSend, onFiles, notify }: Props) {
           }
         }}
       />
+      {otherDevices.length > 0 && (
+        <label className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+          <span>To:</span>
+          <select
+            className={`rounded-lg bg-white px-2 py-1 text-sm ring-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-zinc-900 ${
+              target ? 'font-medium text-indigo-700 ring-indigo-400 dark:text-indigo-300' : 'ring-zinc-300 dark:ring-zinc-700'
+            }`}
+            value={target ?? ''}
+            onChange={(e) => onTarget(e.target.value || null)}
+          >
+            <option value="">All devices</option>
+            {otherDevices.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name} only
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       {(tooLong || isLink) && (
         <p className={`text-xs ${tooLong ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
           {tooLong

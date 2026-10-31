@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { fileSizeProblem, formatBytes } from '../lib/files'
+import { canThumbnail, fileSizeProblem, formatBytes } from '../lib/files'
 import { formatCountdown } from '../lib/qr'
 import { callReceive, ReceiveError } from '../lib/receive'
-import { isAbortError, uploadWithToken } from '../lib/storage'
+import { createThumbnail, isAbortError, uploadWithToken } from '../lib/storage'
 import { PickButton } from './Composer'
 import { inputClass } from './styles'
 import { Button, Logo, Page } from './ui'
@@ -99,12 +99,22 @@ export function GuestSend({ token }: { token: string }) {
     }
     setSent((cur) => [{ key, label, status: 'sending', progress: 0 }, ...cur])
     try {
-      const slot = await callReceive<{ itemId: string; path: string; uploadToken: string }>(token, 'upload', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      })
-      await uploadWithToken(slot.path, slot.uploadToken, file, file.type, (p) => update(key, { progress: p }), new AbortController().signal)
+      const slot = await callReceive<{
+        itemId: string
+        path: string
+        uploadToken: string
+        thumbPath?: string
+        thumbToken?: string
+      }>(token, 'upload', { name: file.name, size: file.size, type: file.type, thumb: canThumbnail(file.type) })
+      const signal = new AbortController().signal
+      await uploadWithToken(slot.path, slot.uploadToken, file, file.type, (p) => update(key, { progress: p }), signal)
+      // Small preview for the owner's list, made here in the guest's browser. Optional.
+      if (slot.thumbPath && slot.thumbToken) {
+        const preview = await createThumbnail(file)
+        if (preview) {
+          await uploadWithToken(slot.thumbPath, slot.thumbToken, preview, 'image/jpeg', () => {}, signal).catch(() => {})
+        }
+      }
       await callReceive(token, 'finish', { itemId: slot.itemId, name: file.name, type: file.type })
       update(key, { status: 'sent', progress: null })
       usedOne()

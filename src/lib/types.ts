@@ -16,14 +16,23 @@ export interface Item {
   kept: boolean
   /** Sent by someone else through a Receive QR code. */
   from_guest: boolean
+  /** Meant for one device only (null = all devices). */
+  target_device_id: string | null
 }
 
 export const ITEM_COLUMNS =
-  'id, kind, content, file_path, file_name, file_size, mime_type, thumb_path, source_device_id, created_at, expires_at, kept, from_guest'
+  'id, kind, content, file_path, file_name, file_size, mime_type, thumb_path, source_device_id, created_at, expires_at, kept, from_guest, target_device_id'
 
 export interface Device {
   id: string
   name: string
+}
+
+/** A device as shown in the devices list. */
+export interface DeviceInfo extends Device {
+  last_seen: string
+  /** Notifications are on for this device. */
+  has_push: boolean
 }
 
 export const DEVICE_COLUMNS = 'id, name'

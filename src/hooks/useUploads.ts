@@ -17,11 +17,15 @@ interface Job {
   upload: Upload
   file: File
   controller: AbortController
+  /** Device this file is for (null = all devices), fixed when it was added. */
+  target: string | null
 }
 
 interface Deps {
   userId: string
   deviceId: string
+  /** Current "To:" choice; captured per file when it's added (null = all devices). */
+  targetDeviceId: string | null
   onItem: (item: Item) => void
   notify: Notify
 }
@@ -47,7 +51,7 @@ export function useUploads(deps: Deps) {
   }, [])
 
   const sendOne = useCallback(
-    async ({ upload, file, controller }: Job) => {
+    async ({ upload, file, controller, target }: Job) => {
       const { userId, deviceId, onItem, notify } = depsRef.current
       const itemId = crypto.randomUUID()
       const { filePath, thumbPath } = objectPaths(userId, itemId, file.name)
@@ -84,6 +88,7 @@ export function useUploads(deps: Deps) {
             mime_type: file.type || null,
             thumb_path: thumb,
             source_device_id: deviceId,
+            target_device_id: target,
           })
           .select(ITEM_COLUMNS)
           .single()
@@ -123,6 +128,7 @@ export function useUploads(deps: Deps) {
         .map<Job>((file) => ({
           file,
           controller: new AbortController(),
+          target: depsRef.current.targetDeviceId,
           upload: { key: crypto.randomUUID(), name: file.name, size: file.size, progress: 0, status: 'waiting' },
         }))
       if (jobs.length === 0) return
