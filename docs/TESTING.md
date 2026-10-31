@@ -66,6 +66,8 @@ Follow `docs/SETUP.md` section 6, then sign in on each device.
 
 ## Phase 2 — Files
 
+**Status:** approved on Android and Windows, 2026-10-31 (including the Photos button).
+
 Do these after SETUP.md section 7 (migration + deploy), with Beam open on both devices.
 
 ### A. Sending files

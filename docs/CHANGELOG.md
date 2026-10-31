@@ -32,3 +32,5 @@ Oldest first.
 - Deleting a file item also removes its stored files.
 - 42 unit tests (added file names, sizes and paths).
 - Added a **Photos** button on touch screens that opens Android's Photos picker.
+## 2026-10-31 — Phase 2: files (complete)
+- Migration applied, deployed, and the device checklist approved on Android and Windows.

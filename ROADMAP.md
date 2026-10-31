@@ -36,7 +36,7 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Signed-URL download
 - [x] Deleting a file item also removes its storage objects
 - [x] TESTING.md checklist for Phase 2
-- [ ] **You:** run the Phase 2 migration, deploy, and run the Phase 2 checklist
+- [x] **You:** run the Phase 2 migration, deploy, and run the Phase 2 checklist (approved 2026-10-31)
 
 ## Phase 2b — Cleanup (moved up from Phase 5 so the 1 GB free storage never fills)
 - [ ] `cleanup` Edge Function deletes expired items + files (and orphaned uploads), scheduled hourly
