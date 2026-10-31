@@ -9,7 +9,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "functions:check": "npx --yes deno@2.9.6 check supabase/functions/cleanup/index.ts supabase/functions/send-push/index.ts",
+    "functions:check": "npx --yes deno@2.9.6 check supabase/functions/cleanup/index.ts supabase/functions/send-push/index.ts supabase/functions/receive/index.ts",
     "lint": "oxlint",
     "check": "npm run typecheck && npm run lint && npm test && npm run build",
     "preview": "vite preview"

@@ -17,6 +17,12 @@ describe('notificationFor', () => {
     expect(body.endsWith('…')).toBe(true)
   })
 
+  it('labels items sent through a Receive code as from a guest', () => {
+    expect(notificationFor({ kind: 'text', content: 'hello', file_name: null, from_guest: true }, null).title).toBe(
+      'From a guest',
+    )
+  })
+
   it('shows links and file names', () => {
     expect(notificationFor({ kind: 'link', content: 'https://example.com', file_name: null }, 'A').body).toBe(
       'https://example.com',

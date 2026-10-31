@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     .eq('id', itemId)
     .is('pushed_at', null)
     .gt('created_at', new Date(Date.now() - MAX_AGE_MS).toISOString())
-    .select('id, user_id, kind, content, file_name, source_device_id')
+    .select('id, user_id, kind, content, file_name, source_device_id, from_guest')
     .maybeSingle()
   if (error) return json({ error: error.message }, 500)
   if (!item) return json({ skipped: true })

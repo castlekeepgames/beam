@@ -422,3 +422,7 @@ verify_jwt = false
 
 [functions.send-push]
 verify_jwt = false
+
+# Called from a guest's browser via a Receive QR code; checks the code itself.
+[functions.receive]
+verify_jwt = false
