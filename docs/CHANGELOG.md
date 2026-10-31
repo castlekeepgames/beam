@@ -65,3 +65,7 @@ Oldest first.
 
 ## 2026-10-31 — Phase 8 (complete)
 - Image paste, app-icon shortcuts and Open link approved on real devices.
+
+## 2026-10-31 — Phase 9: everyday upgrades (built and deployed; awaiting device testing)
+- Full-screen photo viewer; **Your devices** list with Remove; storage meter and **Clear all**; thumbnails for guest photos; **To:** picker to send to one device; search box over the list.
+- New `items.target_device_id` and `beam_storage_used()`; `send-push` notifies only the target; `receive` accepts guest thumbnails. 92 unit tests.

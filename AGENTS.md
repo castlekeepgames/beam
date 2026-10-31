@@ -55,6 +55,9 @@ Prefer well-maintained libraries over hand-rolled code, but don't add a dependen
 - `kept` boolean default false (exempt from expiry; owners may update only `kept` and `expires_at`)
 - `pushed_at` timestamptz null (set by `send-push` when it claims an item; never by clients)
 - `from_guest` boolean default false (sent by someone else through a Receive code)
+- `target_device_id` uuid null references devices (sent to one device only; shown only on that device and the sender, and only that device is notified)
+
+`beam_storage_used()` returns the caller's bytes and file count in the `files` bucket (for the storage meter).
 
 `receive_codes` (Receive QR codes: guests can send to me for 10 minutes)
 - `id`, `user_id`, `token_hash` (SHA-256 hex; the token itself is never stored), `created_at`, `expires_at` (default +10 min, max +1 h), `max_items` (default 20), `used_items`, `revoked_at`. Owners insert and set `revoked_at`; only the `receive` function counts uses (`beam_claim_receive`).

@@ -195,3 +195,20 @@ One entry per meaningful decision, newest at the bottom.
 - **Open link:** `send-push` now includes `url` for link items (http/https only, built in `notificationPayload()`). The service worker adds an **Open link** action that calls `clients.openWindow(url)` and checks the URL again. Tapping the notification itself still opens Beam on the item.
 
 **Note:** Android only shows new shortcuts after Chrome refreshes the installed app (up to a day), or after reinstalling. Windows picks them up when the app next starts.
+### 2026-10-31 — Everyday upgrades (Phase 9)
+**Decision:**
+- **Photo viewer:** tap the preview of any image the browser can show (JPEG, PNG, WebP, GIF, AVIF, BMP, SVG) to see it full-screen. It loads through a 10-minute signed URL and has a Download button. HEIC can't be shown by browsers, so those keep only Download.
+- **Devices list** (in the device menu): name, last seen, and whether notifications are on, with **Remove** for any other device after a confirm. Removing deletes the `devices` row: its items stay, labelled "Unknown device", and its push subscription goes with it. A device that's still in use simply asks for a name next time it opens.
+- **Storage meter:** `beam_storage_used()` (security definer, signed-in users only) sums object sizes from Storage's own records for your folder. That includes files the hourly cleanup hasn't removed yet, so it's the honest number against the Free plan's 1 GB. The bar turns amber above 80%.
+- **Clear all:** two steps (Clear all…, then Delete), and optionally includes kept items. It deletes the rows (other devices update through Realtime), then removes their files in batches of 500. Anything missed is caught by the cleanup job.
+- **Guest thumbnails:** `receive` hands out a second one-time upload slot (`thumb.jpg`) when the guest's page asks for one for an image. The guest's browser makes the preview, and `finish` records `thumb_path` if the file arrived.
+- **Send to one device:** a new `items.target_device_id` column, which the insert policy checks is one of your devices. A **To:** picker appears once you have another device. The choice stays until you change it, and it's highlighted when it isn't "All devices". Each file keeps the target it had when it was added.
+  - Other devices hide targeted items, both on load and in Realtime (`isVisibleTo`).
+  - `send-push` notifies only the target.
+  - Cards show "Sender → Device only".
+  - This is a display choice, not a security boundary: every device is signed in to the same account.
+- **Search:** filters the loaded list as you type. It covers text, links, file names and the device or guest labels, ignores accents and case, and every word must match. It only searches what's loaded (the last 24 hours plus kept items); a longer history stays on the Later list.
+
+**Rejected:**
+- Hiding the To: picker until you have three devices. It would make the feature invisible with your two.
+- Using the database's aggregate API for storage usage. It's switched off by default, and it would only count rows, not the actual files.

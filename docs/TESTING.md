@@ -208,3 +208,33 @@ Close and reopen Beam on each device first (on the PC, Ctrl+Shift+R in the Beam 
 - [ ] With Beam closed on the phone, send a link from the PC. The notification has an **Open link** button, which opens the page in Chrome directly.
 - [ ] Tapping the notification itself (not the button) still opens Beam on that item.
 - [ ] Text and file notifications have no Open link button.
+---
+
+## Phase 9 — Everyday upgrades
+
+Close and reopen Beam on each device first.
+
+**Photo viewer**
+- [ ] Tap the thumbnail of a photo item. It opens full-screen. **Download** saves it; **✕**, Esc (PC) or tapping outside closes it.
+- [ ] Non-image files (PDF etc.) don't open a viewer; Download works as before.
+
+**Your devices**
+- [ ] Device menu → **Your devices** lists every device with "Last seen …" and "Notifications on/off". The current one says **This device**.
+- [ ] **Remove** an old leftover device and confirm. It disappears, and its old items now say "Unknown device".
+
+**Storage**
+- [ ] Device menu → **Storage** shows "<size> of 1 GB · <n> files" with a bar.
+- [ ] **Clear all… → Delete** (leave "Also delete kept items" unticked). Everything except kept items disappears on **both** devices, and the meter drops after reopening the menu.
+
+**Guest photo thumbnails**
+- [ ] Open **Receive** and have a second phone send a photo. It arrives with a thumbnail, and tapping it opens the full-screen viewer.
+
+**Send to one device**
+- [ ] Above the buttons there's a **To:** picker (All devices / <device> only).
+- [ ] On the PC choose **Android phone only** and send text. The phone shows it (and gets a notification if Beam is closed); the PC shows "This device → Android phone only". A third device, if you have one, does not show it.
+- [ ] Files sent while a device is chosen also go only to that device.
+- [ ] Switch back to **All devices** and send. Everything shows everywhere as before.
+
+**Search**
+- [ ] Type a word into **Search** above the list. Only matching items stay (text, links, file names, or device names like "guest"). Accents and capitals don't matter.
+- [ ] A search with no matches says "Nothing matches …". **✕** or Esc clears it.

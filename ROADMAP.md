@@ -87,13 +87,17 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] **Open link** button on link notifications
 - [x] **You:** run the Phase 8 checklist (approved 2026-10-31)
 
+## Phase 9 — Everyday upgrades
+- [x] Tap a photo to view it full-screen (with Download)
+- [x] Your devices list: last seen, notifications on/off, Remove
+- [x] Storage meter (real usage of the 1 GB) and Clear all (kept items optional)
+- [x] Thumbnails for guest photos
+- [x] Send to one device only ("To:" picker; only that device sees it and is notified)
+- [x] Search box over the list (text, links, file names, device names)
+- [ ] **You:** run the Phase 9 checklist
+
 ## Later (not started)
+- [ ] Longer history (search currently covers the last 24 hours plus kept items)
 - [ ] Windows tray app (Tauri) with global hotkey to send clipboard and auto-copy incoming text
 - [ ] End-to-end encryption
-- [ ] Search / longer history
-- [ ] Tap a photo to view it full-screen
-- [ ] Your devices list (with Remove) in the device menu
-- [ ] Storage meter and Clear all
-- [ ] Thumbnails for guest photos
 - [ ] Per-item lifetime (1 h / 24 h / 7 days)
-- [ ] Send to one device only
