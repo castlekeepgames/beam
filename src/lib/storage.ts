@@ -152,15 +152,33 @@ export async function signedUrl(path: string, seconds: number, downloadAs?: stri
   return data.signedUrl
 }
 
-const thumbUrls = new Map<string, { url: string; expires: number }>()
+const signedUrls = new Map<string, { url: string; expires: number }>()
+const MIN_LEFT_MS = 5 * 60_000
 
-/** Signed thumbnail URL, cached so scrolling the list doesn't re-sign every image. */
-export async function thumbnailUrl(path: string): Promise<string> {
-  const cached = thumbUrls.get(path)
-  if (cached && cached.expires > Date.now() + 5 * 60_000) return cached.url
-  const url = await signedUrl(path, 3600)
-  thumbUrls.set(path, { url, expires: Date.now() + 3600_000 })
+/** An hour-long signed URL, cached so scrolling the list doesn't re-sign every image. */
+async function cachedSignedUrl(path: string, downloadAs?: string): Promise<string> {
+  const key = downloadAs === undefined ? path : `${path}\n${downloadAs}`
+  const cached = signedUrls.get(key)
+  if (cached && cached.expires > Date.now() + MIN_LEFT_MS) return cached.url
+  const url = await signedUrl(path, 3600, downloadAs)
+  signedUrls.set(key, { url, expires: Date.now() + 3600_000 })
   return url
+}
+
+/** Signed thumbnail URL (cached). */
+export function thumbnailUrl(path: string): Promise<string> {
+  return cachedSignedUrl(path)
+}
+
+/** Get a download link ready ahead of time, e.g. when the mouse moves over a file. */
+export function prepareDownloadUrl(path: string, fileName: string): Promise<string> {
+  return cachedSignedUrl(path, fileName)
+}
+
+/** The download link from prepareDownloadUrl, if it's ready and still fresh. */
+export function readyDownloadUrl(path: string, fileName: string): string | null {
+  const cached = signedUrls.get(`${path}\n${fileName}`)
+  return cached && cached.expires > Date.now() + MIN_LEFT_MS ? cached.url : null
 }
 
 /** Supabase Free plan file storage (project-wide). */

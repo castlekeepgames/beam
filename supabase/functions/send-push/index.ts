@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     .eq('id', itemId)
     .is('pushed_at', null)
     .gt('created_at', new Date(Date.now() - MAX_AGE_MS).toISOString())
-    .select('id, user_id, kind, content, file_name, source_device_id, target_device_id, from_guest')
+    .select('id, user_id, kind, content, file_name, source_device_id, target_device_id, from_guest, batch_id')
     .maybeSingle()
   if (error) return json({ error: error.message }, 500)
   if (!item) return json({ skipped: true })
@@ -74,7 +74,19 @@ Deno.serve(async (req) => {
   )
   if (targets.length === 0) return json({ sent: 0 })
 
-  const payload = JSON.stringify(notificationPayload(item, sourceName))
+  // Files sent together: one notification that updates as each file arrives.
+  let batch: { id: string; files: { file_name: string | null; mime_type: string | null }[] } | null = null
+  if (item.batch_id) {
+    const { data: files } = await db
+      .from('items')
+      .select('file_name, mime_type')
+      .eq('user_id', item.user_id)
+      .eq('batch_id', item.batch_id)
+      .order('created_at')
+    batch = { id: item.batch_id, files: files ?? [] }
+  }
+
+  const payload = JSON.stringify(notificationPayload(item, sourceName, batch))
   const app = await applicationServer()
 
   let sent = 0

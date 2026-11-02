@@ -101,10 +101,12 @@ Deno.serve(async (req) => {
 
       // Step 2 of a file: the upload finished; create the item so it appears everywhere.
       case 'finish': {
-        const { itemId, name, type } = body
+        const { itemId, name, type, batchId } = body
         if (typeof itemId !== 'string' || !UUID.test(itemId) || !isName(name)) {
           return reply({ error: 'Bad request' }, 400)
         }
+        // Files the guest picked together show as one card (just a label; grants nothing).
+        const batch = typeof batchId === 'string' && UUID.test(batchId) ? batchId : null
         const { data: code } = await db
           .from('receive_codes')
           .select('user_id, created_at')
@@ -133,6 +135,7 @@ Deno.serve(async (req) => {
             mime_type: meta.mimetype || (typeof type === 'string' && type) || null,
             thumb_path: hasThumb ? thumbPath : null,
             from_guest: true,
+            batch_id: batch,
           },
           { onConflict: 'id', ignoreDuplicates: true },
         )

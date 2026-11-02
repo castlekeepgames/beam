@@ -33,7 +33,7 @@ export function GuestSend({ token }: { token: string }) {
   const [sent, setSent] = useState<Sent[]>([])
   const [now, setNow] = useState(() => Date.now())
   const busy = useRef(false)
-  const queue = useRef<File[]>([])
+  const queue = useRef<{ file: File; batchId: string | null }[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -89,7 +89,7 @@ export function GuestSend({ token }: { token: string }) {
     }
   }
 
-  async function sendFile(file: File) {
+  async function sendFile(file: File, batchId: string | null) {
     const key = crypto.randomUUID()
     const label = `${file.name} (${formatBytes(file.size)})`
     const tooBig = fileSizeProblem(file)
@@ -115,7 +115,7 @@ export function GuestSend({ token }: { token: string }) {
           await uploadWithToken(slot.thumbPath, slot.thumbToken, preview, 'image/jpeg', () => {}, signal).catch(() => {})
         }
       }
-      await callReceive(token, 'finish', { itemId: slot.itemId, name: file.name, type: file.type })
+      await callReceive(token, 'finish', { itemId: slot.itemId, name: file.name, type: file.type, batchId })
       update(key, { status: 'sent', progress: null })
       usedOne()
     } catch (err) {
@@ -124,12 +124,13 @@ export function GuestSend({ token }: { token: string }) {
     }
   }
 
-  /** Files go one at a time so progress is easy to follow. */
+  /** Files go one at a time so progress is easy to follow. Files picked together show as one card. */
   async function addFiles(files: File[]) {
-    queue.current.push(...files)
+    const batchId = files.length > 1 ? crypto.randomUUID() : null
+    queue.current.push(...files.map((file) => ({ file, batchId })))
     if (busy.current) return
     busy.current = true
-    for (let file = queue.current.shift(); file; file = queue.current.shift()) await sendFile(file)
+    for (let job = queue.current.shift(); job; job = queue.current.shift()) await sendFile(job.file, job.batchId)
     busy.current = false
   }
 

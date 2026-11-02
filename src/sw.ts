@@ -41,6 +41,8 @@ interface PushPayload {
   itemId?: string
   /** Set for link items: adds an "Open link" button. */
   url?: string
+  /** Shared by every file in a batch, so each new file replaces the last notification. */
+  tag?: string
 }
 
 /** Notification options plus `actions` (supported by Chrome/Edge, missing from TS's lib). */
@@ -64,7 +66,7 @@ self.addEventListener('push', (event) => {
       const options: BeamNotificationOptions = {
         body: data.body ?? 'New item',
         icon: scoped('pwa-192x192.png'),
-        tag: data.itemId ?? 'beam',
+        tag: data.tag ?? data.itemId ?? 'beam',
         data: { itemId: data.itemId ?? null, url },
         actions: url ? [{ action: 'open-link', title: 'Open link' }] : [],
       }

@@ -6,9 +6,11 @@ import { useOnline } from '../hooks/useOnline'
 import { useUploads } from '../hooks/useUploads'
 import { ClipboardUnavailable, clipboardReadGranted, readClipboard, type ClipboardContent } from '../lib/clipboard'
 import { syncPush } from '../lib/push'
+import { groupItems } from '../lib/items'
 import { matchesSearch } from '../lib/search'
 import { formatRelative } from '../lib/time'
 import type { Device, Item } from '../lib/types'
+import { BatchCard } from './BatchCard'
 import { Composer } from './Composer'
 import { ItemCard } from './ItemCard'
 import { Settings } from './Settings'
@@ -60,8 +62,8 @@ export function Home({ userId, device, onRename }: Props) {
     retry,
     sendText: sendTextTo,
     addItem,
-    deleteItem,
-    toggleKeep,
+    deleteItems,
+    setKept,
     clearAll,
     removeDevice,
   } = useItems(userId, device.id)
@@ -155,27 +157,29 @@ export function Home({ userId, device, onRename }: Props) {
   )
 
   const remove = useCallback(
-    async (item: Item) => {
+    async (list: Item[]) => {
       try {
-        await deleteItem(item)
+        await deleteItems(list)
       } catch {
         notify("Couldn't delete. Check your connection and try again.", 'error')
       }
     },
-    [deleteItem, notify],
+    [deleteItems, notify],
   )
+  const removeOne = useCallback((item: Item) => void remove([item]), [remove])
 
   const keep = useCallback(
-    async (item: Item) => {
+    async (list: Item[], kept: boolean) => {
       try {
-        await toggleKeep(item)
-        notify(item.kept ? 'No longer kept: expires in 24 hours' : 'Kept: won’t expire')
+        await setKept(list, kept)
+        notify(kept ? 'Kept: won’t expire' : 'No longer kept: expires in 24 hours')
       } catch {
         notify("Couldn't change Keep. Check your connection and try again.", 'error')
       }
     },
-    [toggleKeep, notify],
+    [setKept, notify],
   )
+  const toggleKeepOne = useCallback((item: Item) => void keep([item], !item.kept), [keep])
 
   const sourceLabel = (item: Item) => {
     if (item.from_guest) return 'Guest'
@@ -321,20 +325,40 @@ export function Home({ userId, device, onRename }: Props) {
           </p>
         ) : (
           <ul className="flex flex-col gap-2.5">
-            {shownItems.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                source={sourceLabel(item)}
-                target={targetLabel(item)}
-                time={formatRelative(item.created_at, now)}
-                fresh={freshIds.has(item.id)}
-                onCopy={copy}
-                onDelete={remove}
-                onToggleKeep={keep}
-                notify={notify}
-              />
-            ))}
+            {groupItems(shownItems).map((entry) => {
+              if (entry.kind === 'batch') {
+                const newest = entry.items[entry.items.length - 1]
+                return (
+                  <BatchCard
+                    key={entry.id}
+                    id={entry.id}
+                    items={entry.items}
+                    source={sourceLabel(newest)}
+                    target={targetLabel(newest)}
+                    time={formatRelative(newest.created_at, now)}
+                    fresh={entry.items.some((i) => freshIds.has(i.id))}
+                    onDelete={(list) => void remove(list)}
+                    onSetKept={(list, kept) => void keep(list, kept)}
+                    notify={notify}
+                  />
+                )
+              }
+              const { item } = entry
+              return (
+                <ItemCard
+                  key={item.id}
+                  item={item}
+                  source={sourceLabel(item)}
+                  target={targetLabel(item)}
+                  time={formatRelative(item.created_at, now)}
+                  fresh={freshIds.has(item.id)}
+                  onCopy={copy}
+                  onDelete={removeOne}
+                  onToggleKeep={toggleKeepOne}
+                  notify={notify}
+                />
+              )
+            })}
           </ul>
         )}
       </section>

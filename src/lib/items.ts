@@ -13,9 +13,16 @@ export function isExpired(item: Item, now = Date.now()): boolean {
   return !item.kept && Date.parse(item.expires_at) <= now
 }
 
-/** The change to send when toggling Keep. Un-keeping gives the item a fresh 24 hours. */
-export function keepChange(item: Item, now = Date.now()): Pick<Item, 'kept'> & Partial<Pick<Item, 'expires_at'>> {
-  return item.kept ? { kept: false, expires_at: new Date(now + ITEM_LIFETIME_MS).toISOString() } : { kept: true }
+type KeepChange = Pick<Item, 'kept'> & Partial<Pick<Item, 'expires_at'>>
+
+/** The change to send when setting Keep. Un-keeping gives the item a fresh 24 hours. */
+export function keepChangeTo(kept: boolean, now = Date.now()): KeepChange {
+  return kept ? { kept: true } : { kept: false, expires_at: new Date(now + ITEM_LIFETIME_MS).toISOString() }
+}
+
+/** The change to send when toggling Keep on one item. */
+export function keepChange(item: Item, now = Date.now()): KeepChange {
+  return keepChangeTo(!item.kept, now)
 }
 
 /**
@@ -41,4 +48,32 @@ export function removeItem(current: Item[], id: string): Item[] {
  */
 export function isVisibleTo(item: Pick<Item, 'target_device_id' | 'source_device_id'>, deviceId: string): boolean {
   return !item.target_device_id || item.target_device_id === deviceId || item.source_device_id === deviceId
+}
+export type ListEntry = { kind: 'item'; item: Item } | { kind: 'batch'; id: string; items: Item[] }
+
+/**
+ * Turn the (newest-first) list into cards: files that share a batch id become
+ * one card, placed where its newest file is, with its files in the order they
+ * were sent. A batch with only one file left shows as a normal card.
+ */
+export function groupItems(items: Item[]): ListEntry[] {
+  const batches = new Map<string, Item[]>()
+  for (const item of items) {
+    if (!item.batch_id) continue
+    const members = batches.get(item.batch_id)
+    if (members) members.push(item)
+    else batches.set(item.batch_id, [item])
+  }
+  const entries: ListEntry[] = []
+  const placed = new Set<string>()
+  for (const item of items) {
+    const members = item.batch_id ? batches.get(item.batch_id) : undefined
+    if (!item.batch_id || !members || members.length < 2) {
+      entries.push({ kind: 'item', item })
+    } else if (!placed.has(item.batch_id)) {
+      placed.add(item.batch_id)
+      entries.push({ kind: 'batch', id: item.batch_id, items: [...members].reverse() })
+    }
+  }
+  return entries
 }

@@ -2,6 +2,7 @@ import { MAX_FILE_BYTES } from '../../supabase/functions/_shared/names'
 
 // Shared with the Edge Functions so guest uploads are named the same way.
 export { BUCKET, MAX_FILE_BYTES, objectPaths, safeObjectName } from '../../supabase/functions/_shared/names'
+export { batchLabel } from '../../supabase/functions/_shared/preview'
 
 const UNITS = ['B', 'KB', 'MB', 'GB']
 

@@ -19,6 +19,8 @@ interface Job {
   controller: AbortController
   /** Device this file is for (null = all devices), fixed when it was added. */
   target: string | null
+  /** Shared by files added together, so they show as one card. */
+  batchId: string | null
 }
 
 interface Deps {
@@ -51,7 +53,7 @@ export function useUploads(deps: Deps) {
   }, [])
 
   const sendOne = useCallback(
-    async ({ upload, file, controller, target }: Job) => {
+    async ({ upload, file, controller, target, batchId }: Job) => {
       const { userId, deviceId, onItem, notify } = depsRef.current
       const itemId = crypto.randomUUID()
       const { filePath, thumbPath } = objectPaths(userId, itemId, file.name)
@@ -89,6 +91,7 @@ export function useUploads(deps: Deps) {
             thumb_path: thumb,
             source_device_id: deviceId,
             target_device_id: target,
+            batch_id: batchId,
           })
           .select(ITEM_COLUMNS)
           .single()
@@ -123,14 +126,16 @@ export function useUploads(deps: Deps) {
       else if (tooBig.length > 1)
         notify(`${tooBig.length} files are over ${formatBytes(MAX_FILE_BYTES)} and were skipped.`, 'error')
 
-      const jobs = files
-        .filter((f) => !fileSizeProblem(f))
-        .map<Job>((file) => ({
-          file,
-          controller: new AbortController(),
-          target: depsRef.current.targetDeviceId,
-          upload: { key: crypto.randomUUID(), name: file.name, size: file.size, progress: 0, status: 'waiting' },
-        }))
+      const accepted = files.filter((f) => !fileSizeProblem(f))
+      // Files picked, dropped or shared together travel as one batch.
+      const batchId = accepted.length > 1 ? crypto.randomUUID() : null
+      const jobs = accepted.map<Job>((file) => ({
+        file,
+        controller: new AbortController(),
+        target: depsRef.current.targetDeviceId,
+        batchId,
+        upload: { key: crypto.randomUUID(), name: file.name, size: file.size, progress: 0, status: 'waiting' },
+      }))
       if (jobs.length === 0) return
       queue.current.push(...jobs)
       setUploads((cur) => [...cur, ...jobs.map((j) => j.upload)])

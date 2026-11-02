@@ -18,10 +18,12 @@ export interface Item {
   from_guest: boolean
   /** Meant for one device only (null = all devices). */
   target_device_id: string | null
+  /** Shared by files sent together (null = sent on its own). */
+  batch_id: string | null
 }
 
 export const ITEM_COLUMNS =
-  'id, kind, content, file_path, file_name, file_size, mime_type, thumb_path, source_device_id, created_at, expires_at, kept, from_guest, target_device_id'
+  'id, kind, content, file_path, file_name, file_size, mime_type, thumb_path, source_device_id, created_at, expires_at, kept, from_guest, target_device_id, batch_id'
 
 export interface Device {
   id: string

@@ -1,8 +1,12 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useState, type ReactNode } from 'react'
 import { canViewImage, extensionLabel, formatBytes } from '../lib/files'
 import { isSafeHttpUrl } from '../lib/links'
-import { describeStorageError, fetchWithProgress, saveBlob, signedUrl, thumbnailUrl } from '../lib/storage'
+import { useThumbnail } from '../hooks/useThumbnail'
+import { downloadFile } from '../lib/download'
+import { describeStorageError } from '../lib/storage'
 import type { Item } from '../lib/types'
+import { fileDragProps } from './fileDrag'
+import { PhotoViewer } from './PhotoViewer'
 import type { Notify } from './Toast'
 import { buttonClass } from './styles'
 import { Button } from './ui'
@@ -38,29 +42,8 @@ export function ItemCard({ item, source, target, time, fresh, onCopy, onDelete, 
   const download = useDownload(item, notify)
 
   return (
-    <li
-      id={`item-${item.id}`}
-      className={`scroll-mt-4 rounded-2xl bg-white p-3.5 ring-1 transition-shadow duration-700 dark:bg-zinc-900 ${
-        fresh ? 'ring-2 ring-indigo-500 shadow-md shadow-indigo-500/20' : 'ring-zinc-200 dark:ring-zinc-800'
-      }`}
-    >
-      <p className="mb-1.5 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-        <span className="min-w-0 truncate">
-          <span className="font-medium text-zinc-700 dark:text-zinc-300">{source}</span>
-          {target && (
-            <>
-              {' → '}
-              <span className="font-medium text-indigo-700 dark:text-indigo-300">{target} only</span>
-            </>
-          )}{' '}
-          · {time}
-        </span>
-        {item.kept && (
-          <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-indigo-700 uppercase dark:bg-indigo-950 dark:text-indigo-300">
-            Kept
-          </span>
-        )}
-      </p>
+    <CardShell id={`item-${item.id}`} fresh={fresh}>
+      <CardMeta source={source} target={target} time={time} kept={item.kept} />
 
       {isFile ? (
         <FileSummary item={item} onDownload={download.start} />
@@ -139,6 +122,53 @@ export function ItemCard({ item, source, target, time, fresh, onCopy, onDelete, 
           <QrDialog item={item} onClose={closeQr} />
         </Suspense>
       )}
+    </CardShell>
+  )
+}
+
+/** "Pixel → This device only · 5 min ago", plus a Kept badge. */
+export function CardMeta({
+  source,
+  target,
+  time,
+  kept,
+}: {
+  source: string
+  target: string | null
+  time: string
+  kept: boolean
+}) {
+  return (
+    <p className="mb-1.5 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+      <span className="min-w-0 truncate">
+        <span className="font-medium text-zinc-700 dark:text-zinc-300">{source}</span>
+        {target && (
+          <>
+            {' → '}
+            <span className="font-medium text-indigo-700 dark:text-indigo-300">{target} only</span>
+          </>
+        )}{' '}
+        · {time}
+      </span>
+      {kept && (
+        <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-indigo-700 uppercase dark:bg-indigo-950 dark:text-indigo-300">
+          Kept
+        </span>
+      )}
+    </p>
+  )
+}
+
+/** The rounded card every item and batch sits in. */
+export function CardShell({ id, fresh, children }: { id: string; fresh: boolean; children: ReactNode }) {
+  return (
+    <li
+      id={id}
+      className={`scroll-mt-4 rounded-2xl bg-white p-3.5 ring-1 transition-shadow duration-700 dark:bg-zinc-900 ${
+        fresh ? 'ring-2 ring-indigo-500 shadow-md shadow-indigo-500/20' : 'ring-zinc-200 dark:ring-zinc-800'
+      }`}
+    >
+      {children}
     </li>
   )
 }
@@ -151,7 +181,12 @@ function FileSummary({ item, onDownload }: { item: Item; onDownload: () => void 
   const viewable = !!item.file_path && canViewImage(item.mime_type ?? '')
 
   const preview = thumb ? (
-    <img src={thumb} alt="" className="h-16 w-16 shrink-0 rounded-xl bg-zinc-100 object-cover dark:bg-zinc-800" />
+    <img
+      src={thumb}
+      alt=""
+      draggable={false}
+      className="h-16 w-16 shrink-0 rounded-xl bg-zinc-100 object-cover dark:bg-zinc-800"
+    />
   ) : (
     <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xs font-bold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300">
       {extensionLabel(name)}
@@ -159,119 +194,31 @@ function FileSummary({ item, onDownload }: { item: Item; onDownload: () => void 
   )
 
   return (
-    <div className="flex items-center gap-3">
-      {viewable ? (
-        <button
-          type="button"
-          className="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-          onClick={() => setViewing(true)}
-          aria-label={`View ${name}`}
-          title="View full size"
-        >
-          {preview}
-        </button>
-      ) : (
-        preview
-      )}
-      {viewing && item.file_path && (
-        <PhotoViewer path={item.file_path} name={name} onDownload={onDownload} onClose={closeViewer} />
-      )}
-      <div className="min-w-0">
-        <p className="line-clamp-2 font-medium break-all">{name}</p>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">{formatBytes(item.file_size ?? 0)}</p>
-      </div>
-    </div>
-  )
-}
-
-/** Full-screen view of an image item, loaded through a short-lived signed URL. */
-function PhotoViewer({
-  path,
-  name,
-  onDownload,
-  onClose,
-}: {
-  path: string
-  name: string
-  onDownload: () => void
-  onClose: () => void
-}) {
-  const [state, setState] = useState<{ status: 'loading' } | { status: 'ready'; url: string } | { status: 'error' }>({
-    status: 'loading',
-  })
-
-  useEffect(() => {
-    let cancelled = false
-    signedUrl(path, 600)
-      .then((url) => {
-        if (!cancelled) setState({ status: 'ready', url })
-      })
-      .catch(() => {
-        if (!cancelled) setState({ status: 'error' })
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [path])
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={name}
-      className="fixed inset-0 z-50 flex flex-col bg-black/95 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
-      onClick={onClose}
-    >
-      <div className="flex items-center gap-2 p-3 text-white" onClick={(e) => e.stopPropagation()}>
-        <p className="min-w-0 flex-1 truncate text-sm">{name}</p>
-        <Button size="sm" variant="secondary" onClick={onDownload}>
-          Download
-        </Button>
-        <Button size="sm" variant="ghost" className="text-white! hover:bg-white/10!" onClick={onClose} aria-label="Close">
-          ✕
-        </Button>
-      </div>
-      <div className="flex min-h-0 flex-1 items-center justify-center p-2">
-        {state.status === 'loading' && <p className="text-sm text-zinc-400">Loading…</p>}
-        {state.status === 'error' && <p className="text-sm text-zinc-400">Couldn't load the photo. Check your connection.</p>}
-        {state.status === 'ready' && (
-          <img
-            src={state.url}
-            alt={name}
-            className="max-h-full max-w-full object-contain"
-            onClick={(e) => e.stopPropagation()}
-            onError={() => setState({ status: 'error' })}
-          />
+    <>
+      <div className="flex items-center gap-3" {...fileDragProps(item)}>
+        {viewable ? (
+          <button
+            type="button"
+            className="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+            onClick={() => setViewing(true)}
+            aria-label={`View ${name}`}
+            title="View full size"
+          >
+            {preview}
+          </button>
+        ) : (
+          preview
         )}
+        <div className="min-w-0">
+          <p className="line-clamp-2 font-medium break-all">{name}</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">{formatBytes(item.file_size ?? 0)}</p>
+        </div>
       </div>
-    </div>
+      {viewing && item.file_path && (
+        <PhotoViewer photos={[item]} start={0} onDownload={onDownload} onClose={closeViewer} />
+      )}
+    </>
   )
-}
-
-/** Signed URL for an item's thumbnail, or null while loading / if there is none. */
-function useThumbnail(path: string | null) {
-  const [loaded, setLoaded] = useState<{ path: string; url: string } | null>(null)
-  useEffect(() => {
-    if (!path) return
-    let cancelled = false
-    thumbnailUrl(path)
-      .then((url) => {
-        if (!cancelled) setLoaded({ path, url })
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  }, [path])
-  return loaded && loaded.path === path ? loaded.url : null
 }
 
 /** Download via a short-lived signed URL, with progress. */
@@ -283,9 +230,7 @@ function useDownload(item: Item, notify: Notify) {
     const name = item.file_name ?? 'download'
     setProgress(0)
     try {
-      const url = await signedUrl(item.file_path, 60)
-      const blob = await fetchWithProgress(url, item.file_size ?? 0, setProgress)
-      saveBlob(blob, name)
+      await downloadFile(item, setProgress)
       notify(`Downloaded ${name}`)
     } catch (error) {
       notify(`Couldn't download "${name}". ${describeStorageError(error)}`, 'error')

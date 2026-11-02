@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { isVisibleTo, ITEM_LIMIT, keepChange, mergeItems, removeItem } from '../lib/items'
+import { isVisibleTo, ITEM_LIMIT, keepChangeTo, mergeItems, removeItem } from '../lib/items'
 import { classifyText } from '../lib/links'
 import { removeObjects } from '../lib/storage'
 import { supabase } from '../lib/supabase'
@@ -172,16 +172,20 @@ export function useItems(userId: string, deviceId: string) {
     [deviceId],
   )
 
-  const toggleKeep = useCallback(
-    async (item: Item) => {
-      const change = keepChange(item)
-      setItems((cur) => mergeItems(cur, [{ ...item, ...change }]))
-      const { data, error } = await supabase.from('items').update(change).eq('id', item.id).select(ITEM_COLUMNS).single()
+  /** Keep or un-keep one item or a whole batch. */
+  const setKept = useCallback(
+    async (list: Item[], kept: boolean) => {
+      const changing = list.filter((i) => i.kept !== kept)
+      if (changing.length === 0) return
+      const change = keepChangeTo(kept)
+      setItems((cur) => mergeItems(cur, changing.map((i) => ({ ...i, ...change }))))
+      const ids = changing.map((i) => i.id)
+      const { data, error } = await supabase.from('items').update(change).in('id', ids).select(ITEM_COLUMNS)
       if (error) {
         void refetch(true)
         throw new Error(error.message)
       }
-      setItems((cur) => mergeItems(cur, [data]))
+      setItems((cur) => mergeItems(cur, data))
     },
     [refetch],
   )
@@ -191,16 +195,18 @@ export function useItems(userId: string, deviceId: string) {
     setItems((cur) => mergeItems(cur, [item]))
   }, [])
 
-  const deleteItem = useCallback(
-    async (item: Item) => {
-      setItems((cur) => removeItem(cur, item.id))
-      const { error } = await supabase.from('items').delete().eq('id', item.id)
+  /** Delete one item or a whole batch. */
+  const deleteItems = useCallback(
+    async (list: Item[]) => {
+      const ids = new Set(list.map((i) => i.id))
+      setItems((cur) => cur.filter((i) => !ids.has(i.id)))
+      const { error } = await supabase.from('items').delete().in('id', [...ids])
       if (error) {
         void refetch(true)
         throw new Error(error.message)
       }
-      // Row first so it vanishes everywhere at once; leftovers are swept by the cleanup job.
-      const paths = [item.file_path, item.thumb_path].filter((p): p is string => !!p)
+      // Rows first so they vanish everywhere at once; leftovers are swept by the cleanup job.
+      const paths = list.flatMap((i) => [i.file_path, i.thumb_path]).filter((p): p is string => !!p)
       void removeObjects(paths).catch(() => {})
     },
     [refetch],
@@ -251,8 +257,8 @@ export function useItems(userId: string, deviceId: string) {
     retry,
     sendText,
     addItem,
-    deleteItem,
-    toggleKeep,
+    deleteItems,
+    setKept,
     clearAll,
     removeDevice,
   }

@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { ITEM_LIFETIME_MS, ITEM_LIMIT, isExpired, isVisibleTo, keepChange, mergeItems, removeItem } from './items'
+import {
+  groupItems,
+  ITEM_LIFETIME_MS,
+  ITEM_LIMIT,
+  isExpired,
+  isVisibleTo,
+  keepChange,
+  keepChangeTo,
+  mergeItems,
+  removeItem,
+} from './items'
 import type { Item } from './types'
 
 const NOW = Date.parse('2026-10-30T12:00:00Z')
@@ -21,6 +31,7 @@ function item(id: string, createdMinutesAgo: number, overrides: Partial<Item> = 
     kept: false,
     from_guest: false,
     target_device_id: null,
+    batch_id: null,
     ...overrides,
   }
 }
@@ -103,5 +114,39 @@ describe('isVisibleTo', () => {
     expect(isVisibleTo(item, 'phone')).toBe(true)
     expect(isVisibleTo(item, 'pc')).toBe(true)
     expect(isVisibleTo(item, 'laptop')).toBe(false)
+  })
+})
+describe('keepChangeTo', () => {
+  it('sets Keep for a whole batch the same way as for one item', () => {
+    expect(keepChangeTo(true, NOW)).toEqual({ kept: true })
+    expect(keepChangeTo(false, NOW)).toEqual({ kept: false, expires_at: new Date(NOW + ITEM_LIFETIME_MS).toISOString() })
+  })
+})
+
+describe('groupItems', () => {
+  // Newest first, as the list is kept: b3 b2 x b1 (b = one batch).
+  const list = [
+    item('b3', 1, { batch_id: 'B' }),
+    item('b2', 2, { batch_id: 'B' }),
+    item('x', 3),
+    item('b1', 4, { batch_id: 'B' }),
+    item('lonely', 5, { batch_id: 'C' }),
+  ]
+
+  it('puts a batch where its newest file is, with files in the order they were sent', () => {
+    const entries = groupItems(list)
+    expect(entries.map((e) => (e.kind === 'batch' ? `batch:${e.items.map((i) => i.id).join(',')}` : e.item.id))).toEqual([
+      'batch:b1,b2,b3',
+      'x',
+      'lonely',
+    ])
+  })
+
+  it('shows a batch with only one file left as a normal item', () => {
+    expect(groupItems([item('only', 1, { batch_id: 'B' })])).toEqual([{ kind: 'item', item: expect.objectContaining({ id: 'only' }) }])
+  })
+
+  it('leaves items without a batch alone', () => {
+    expect(groupItems([item('a', 1), item('b', 2)]).map((e) => e.kind)).toEqual(['item', 'item'])
   })
 })
