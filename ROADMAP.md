@@ -96,6 +96,14 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 - [x] Search box over the list (text, links, file names, device names)
 - [x] **You:** run the Phase 9 checklist (approved 2026-10-31)
 
+## Phase 10 — Batches and drag-out
+- [x] Dragging a file out of Beam (PC) saves the real file, not the thumbnail
+- [x] Files picked, dropped or shared together become one batch (`items.batch_id`), shown as one card with a grid of files
+- [x] **Download all**: on the PC, pick a folder and every file is saved straight into it; on the phone, each file downloads in turn
+- [x] Photo viewer moves between a batch's photos (arrows, ← → keys, swipe)
+- [x] One notification per batch that updates as files arrive; guests' multi-file sends are batched too
+- [ ] **You:** run the Phase 10 checklist
+
 ## Later (not started)
 - [ ] Longer history (search currently covers the last 24 hours plus kept items)
 - [ ] Windows tray app (Tauri) with global hotkey to send clipboard and auto-copy incoming text

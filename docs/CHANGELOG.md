@@ -72,3 +72,8 @@ Oldest first.
 
 ## 2026-10-31 — Phase 9 (complete)
 - Photo viewer, devices list, storage meter + Clear all, guest thumbnails, To: picker and search approved.
+
+## 2026-11-02 — Phase 10: batches and drag-out (built and deployed; awaiting device testing)
+- Dragging a file out of Beam on the PC saves the real file, not the thumbnail.
+- Files sent together arrive as one batch card with **Download all** (to a folder on the PC, one by one on the phone), Keep and Delete all; the photo viewer steps through a batch; one updating notification per batch.
+- New `items.batch_id`; `send-push` and `receive` updated. 102 unit tests.

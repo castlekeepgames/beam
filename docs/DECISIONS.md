@@ -212,3 +212,15 @@ One entry per meaningful decision, newest at the bottom.
 **Rejected:**
 - Hiding the To: picker until you have three devices. It would make the feature invisible with your two.
 - Using the database's aggregate API for storage usage. It's switched off by default, and it would only count rows, not the actual files.
+
+### 2026-11-02 — Batches and dragging files out (Phase 10)
+**Decision:**
+- **Drag out saves the real file:** file rows, batch tiles and the photo viewer use Chrome/Edge's `DownloadURL` drag data (`type:name:url`), so dropping on the desktop or in Explorer downloads the actual file under its real name. The data must be set at the instant the drag starts, so a 1-hour signed download link is prepared when the mouse moves over a file and cached. Thumbnails are marked `draggable={false}` so the browser no longer drags the preview image. Only with a mouse (`pointer: fine`); phones are unchanged.
+- **Batches:** files added in one go (picker, drag-and-drop, Android share, guest picker) share a new `items.batch_id`. Each file is still its own row (expiry, delete, search and storage cleanup work as before); the list groups rows with the same batch id into one card (`groupItems`), placed where its newest file is. A batch with one file left shows as a normal card. The batch id is only a label: it grants nothing, and RLS is unchanged.
+- **Download all:** on Chrome/Edge on a computer, it asks for a folder (`showDirectoryPicker`) and streams each file straight to disk, adding " (1)" instead of overwriting. Nothing is held in memory, so large batches are fine. Elsewhere (Android) each file downloads in turn with a short pause so the browser doesn't drop any. Failures are listed; the rest still save.
+- **Notifications:** `send-push` looks up the batch so far and sends `tag: batch-<id>`, so each new file replaces the previous notification ("3 photos: a.jpg, b.jpg, …") instead of stacking one per file.
+- **Batch card:** grid of thumbnails (or type + name), total size, **Download all**, **Keep**/**Unkeep** for all, **Delete all**. Tapping a photo opens the viewer, which now steps through the batch's photos; tapping another file downloads it. No QR code for batches (a QR holds one link).
+
+**Rejected:**
+- A zip file for Download all. It needs a library or a hand-written zip writer, holds everything in memory (a problem on the phone with 50 MB files), and leaves you to unzip it. A folder on the PC and separate downloads on the phone are simpler.
+- One row per batch with a list of files inside. Every part of the app (expiry, keep, search, cleanup, push) works per row, and grouping on display keeps all of that unchanged.

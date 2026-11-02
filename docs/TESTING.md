@@ -240,3 +240,36 @@ Close and reopen Beam on each device first.
 **Search**
 - [ ] Type a word into **Search** above the list. Only matching items stay (text, links, file names, or device names like "guest"). Accents and capitals don't matter.
 - [ ] A search with no matches says "Nothing matches …". **✕** or Esc clears it.
+
+## Phase 10 — Batches and drag-out
+
+Close and reopen Beam on each device first (twice if the new look doesn't appear).
+
+**Drag out (PC)**
+- [ ] Hover over a photo item's thumbnail for a moment, then drag it onto the desktop or into an Explorer folder. The **full-size photo** appears there with its real name (not a small thumbnail).
+- [ ] Same for a PDF or other file: drag the row (icon or name) out and the real file is saved.
+- [ ] In a batch, drag a single tile out: that one file is saved.
+- [ ] In the full-screen viewer, drag the photo out: the full-size file is saved.
+- [ ] If a drag does nothing the very first time, try once more (the link is prepared when the mouse first moves over the file).
+
+**Send a batch**
+- [ ] On the phone, tap **Photos** and pick 3–5 photos at once. Each uploads in turn, then the PC shows **one card**: "5 photos · <size>" with a grid of thumbnails.
+- [ ] On Android, share several photos from Google Photos to Beam: they arrive as one batch.
+- [ ] On the PC, drag several files onto Beam (or pick several with **Files…**): one card on the phone, labelled "<n> files" if they're mixed.
+- [ ] Picking a single file still gives a normal card.
+- [ ] With Beam closed on the receiving device, you get **one** notification (e.g. "3 photos: IMG_1.jpg, …") that updates as files arrive, not one per file. Tapping it opens Beam at the batch.
+
+**Download a batch**
+- [ ] PC: **Download all (n)** asks for a folder (first time: Chrome/Edge also asks to let Beam save files there; allow it). Every file is saved into that folder with progress shown, then "Saved n files to “…”". Files with names already in the folder get " (1)" added rather than being overwritten.
+- [ ] If Chrome says it can't use a folder (e.g. Downloads itself or Desktop), make or pick a subfolder such as **Pictures\Beam**.
+- [ ] Phone: **Download all (n)** downloads each file in turn (Chrome may ask once to allow multiple downloads; allow it). They show up in Downloads and in the gallery.
+- [ ] Tap a photo tile: the viewer opens with "2 of 5"; swipe (phone) or use the arrows / ← → keys (PC) to move between the batch's photos. **Download** saves the one you're looking at.
+- [ ] Tap a non-photo tile (PDF, video…): it downloads that one file.
+
+**Batch actions**
+- [ ] **Keep** on a batch keeps all its files (badge shows Kept); **Unkeep** gives them 24 hours again.
+- [ ] **Delete all** removes the batch on both devices.
+- [ ] Search for one file's name: the batch shows just the matching file(s).
+
+**Guests**
+- [ ] Open **Receive**, and from a second phone pick several photos at once on the guest page. They arrive as one batch.

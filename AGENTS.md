@@ -56,6 +56,7 @@ Prefer well-maintained libraries over hand-rolled code, but don't add a dependen
 - `pushed_at` timestamptz null (set by `send-push` when it claims an item; never by clients)
 - `from_guest` boolean default false (sent by someone else through a Receive code)
 - `target_device_id` uuid null references devices (sent to one device only; shown only on that device and the sender, and only that device is notified)
+- `batch_id` uuid null (files sent together share it: shown as one card with Download all, and one notification that updates as files arrive)
 
 `beam_storage_used()` returns the caller's bytes and file count in the `files` bucket (for the storage meter).
 
