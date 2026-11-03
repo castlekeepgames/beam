@@ -99,7 +99,8 @@ Work top to bottom. Tick items as they're done; add new tasks to the relevant ph
 ## Phase 10 — Batches and drag-out
 - [x] Dragging a file out of Beam (PC) saves the real file, not the thumbnail
 - [x] Files picked, dropped or shared together become one batch (`items.batch_id`), shown as one card with a grid of files
-- [x] **Download all**: on the PC, pick a folder and every file is saved straight into it; on the phone, each file downloads in turn
+- [x] **Download all**: each file downloads in turn into Downloads; on the PC, **Save to folder…** saves straight into a folder you pick
+- [x] Start Beam with Windows (manual setting, SETUP.md section 11)
 - [x] Photo viewer moves between a batch's photos (arrows, ← → keys, swipe)
 - [x] One notification per batch that updates as files arrive; guests' multi-file sends are batched too
 - [ ] **You:** run the Phase 10 checklist

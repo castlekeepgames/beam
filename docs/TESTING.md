@@ -260,8 +260,8 @@ Close and reopen Beam on each device first (twice if the new look doesn't appear
 - [ ] With Beam closed on the receiving device, you get **one** notification (e.g. "3 photos: IMG_1.jpg, …") that updates as files arrive, not one per file. Tapping it opens Beam at the batch.
 
 **Download a batch**
-- [ ] PC: **Download all (n)** asks for a folder (first time: Chrome/Edge also asks to let Beam save files there; allow it). Every file is saved into that folder with progress shown, then "Saved n files to “…”". Files with names already in the folder get " (1)" added rather than being overwritten.
-- [ ] If Chrome says it can't use a folder (e.g. Downloads itself or Desktop), make or pick a subfolder such as **Pictures\Beam**.
+- [ ] PC: **Download all (n)** saves every file into your normal Downloads folder, with progress shown (Chrome may ask once to allow multiple downloads; allow it). If Chrome is set to ask where to save each file, you'll get one Save dialog per file.
+- [ ] PC: **Save to folder…** asks for a folder and saves every file straight into it, then says "Saved n files to “…”". Files with names already there get " (1)" added rather than being overwritten. Chrome refuses Downloads, Desktop and Documents themselves ("contains system files"), so pick or make a folder inside them, e.g. **Downloads\Beam**.
 - [ ] Phone: **Download all (n)** downloads each file in turn (Chrome may ask once to allow multiple downloads; allow it). They show up in Downloads and in the gallery.
 - [ ] Tap a photo tile: the viewer opens with "2 of 5"; swipe (phone) or use the arrows / ← → keys (PC) to move between the batch's photos. **Download** saves the one you're looking at.
 - [ ] Tap a non-photo tile (PDF, video…): it downloads that one file.
@@ -273,3 +273,6 @@ Close and reopen Beam on each device first (twice if the new look doesn't appear
 
 **Guests**
 - [ ] Open **Receive**, and from a second phone pick several photos at once on the guest page. They arrive as one batch.
+
+**Start with Windows**
+- [ ] Follow `docs/SETUP.md` section 11, restart the PC, and Beam opens on its own after you sign in.

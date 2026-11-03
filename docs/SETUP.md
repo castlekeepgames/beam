@@ -222,3 +222,30 @@ This lets Claude (or you) apply database changes and deploy server code from Pow
 2. Android picks up the new share option when Chrome refreshes the installed app. This can take a little while, sometimes up to a day.
 3. To get it straight away: long-press the Beam icon → **App info** → **Uninstall**, then reinstall from Chrome (`https://castlekeepgames.github.io/beam/` → **⋮ → Install app**). You may need to sign in and name the phone again; that's fine.
 4. Share something from any app (**Share → Beam**). Beam opens briefly, sends it, and shows "Shared to Beam ✓".
+
+---
+
+## 11. Start Beam when Windows starts (optional)
+
+Websites can't add themselves to Windows startup, so this is a one-time setting on the PC.
+
+**Chrome (the easy way):**
+1. Open the Beam window.
+2. Click **⋮** in Beam's title bar → **App info**. (Or open `chrome://apps` in Chrome and right-click **Beam** → **App settings**.)
+3. Turn on **Start app when you sign in**.
+4. Restart Windows to check: Beam opens on its own after you sign in.
+
+**Edge:** open `edge://apps`, click **⋯** on Beam → **Start app when you sign in**.
+
+**If you can't find that option**, put Beam's shortcut in Windows' Startup folder instead:
+1. Press **Win+R**, type `shell:startup`, press Enter. A Startup folder opens.
+2. Open Start, find **Beam**, right-click → **Open file location**. A folder with the Beam shortcut opens.
+3. Copy the **Beam** shortcut into the Startup folder.
+
+Or in PowerShell, for an app installed from Chrome:
+
+```powershell
+Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Chrome Apps\Beam.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\"
+```
+
+To stop it starting with Windows, turn the setting off again or delete the shortcut from the Startup folder. Closing the Beam window is fine: notifications keep arriving as long as Chrome/Edge is allowed to run in the background (section 9, step 3).

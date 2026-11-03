@@ -77,3 +77,7 @@ Oldest first.
 - Dragging a file out of Beam on the PC saves the real file, not the thumbnail.
 - Files sent together arrive as one batch card with **Download all** (to a folder on the PC, one by one on the phone), Keep and Delete all; the photo viewer steps through a batch; one updating notification per batch.
 - New `items.batch_id`; `send-push` and `receive` updated. 102 unit tests.
+
+## 2026-11-03 — Download all into Downloads
+- **Download all** saves into your normal Downloads folder on the PC too; picking a folder is now the separate **Save to folder…** button.
+- SETUP.md section 11: how to start Beam when Windows starts.

@@ -224,3 +224,8 @@ One entry per meaningful decision, newest at the bottom.
 **Rejected:**
 - A zip file for Download all. It needs a library or a hand-written zip writer, holds everything in memory (a problem on the phone with 50 MB files), and leaves you to unzip it. A folder on the PC and separate downloads on the phone are simpler.
 - One row per batch with a list of files inside. Every part of the app (expiry, keep, search, cleanup, push) works per row, and grouping on display keeps all of that unchanged.
+
+### 2026-11-03 — Download all uses normal downloads; folder saving is optional
+**Decision:** on the PC, **Download all** now uses ordinary browser downloads (your Downloads folder, like any other download). Saving straight into a folder you pick moved to a separate **Save to folder…** button (Chrome/Edge on a computer only).
+**Why:** saving into a folder uses Chrome's folder-access permission. Chrome blocks that permission for whole sensitive folders (Downloads, Desktop, Documents, your user folder) and shows "can't open this folder because it contains system files". Only folders inside them are allowed. Ordinary downloads have no such limit, which is what you expect from Chrome.
+**Also:** a website can't make itself start with Windows. Starting Beam at sign-in is a one-time Chrome/Edge app setting (or a Startup-folder shortcut), documented in SETUP.md section 11.
