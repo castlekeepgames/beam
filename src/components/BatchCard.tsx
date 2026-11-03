@@ -48,17 +48,22 @@ export function BatchCard({ id, items, source, target, time, fresh, onDelete, on
     }
   }
 
-  async function downloadEverything() {
+  /**
+   * Download all: normal browser downloads (your Downloads folder, like any
+   * other download). "Save to folder…" (Chrome/Edge on a computer) writes them
+   * straight into a folder you pick instead.
+   */
+  async function downloadEverything(toFolder: boolean) {
     if (progress) return
-    // On a computer (Chrome/Edge): pick a folder and save them all straight into it.
     let folder: FileSystemDirectoryHandle | null = null
-    if (canSaveToFolder()) {
+    if (toFolder) {
       try {
         folder = await pickFolder(allPhotos)
-        if (!folder) return // cancelled
       } catch {
-        folder = null // folder saving refused; fall back to normal downloads
+        notify("Couldn't use that folder. Try Download all instead.", 'error')
+        return
       }
+      if (!folder) return // cancelled
     }
     setProgress({ label: 'Starting…', value: 0 })
     try {
@@ -105,9 +110,20 @@ export function BatchCard({ id, items, source, target, time, fresh, onDelete, on
       )}
 
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-        <Button size="sm" onClick={downloadEverything} disabled={progress !== null}>
+        <Button size="sm" onClick={() => void downloadEverything(false)} disabled={progress !== null}>
           {`Download all (${items.length})`}
         </Button>
+        {canSaveToFolder() && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => void downloadEverything(true)}
+            disabled={progress !== null}
+            title="Save every file straight into a folder you pick (Chrome won't allow Downloads or Desktop themselves, so pick or make a folder inside them)"
+          >
+            Save to folder…
+          </Button>
+        )}
         <Button
           size="sm"
           variant="ghost"
